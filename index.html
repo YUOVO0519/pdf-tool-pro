@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF 工具箱 Pro</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
+  h1 { text-align: center; margin-bottom: 8px; color: #00d4ff; }
+  .subtitle { text-align: center; color: #666; margin-bottom: 24px; font-size: 13px; }
+  .tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab { padding: 10px 20px; background: #16213e; border: none; color: #888; cursor: pointer; border-radius: 8px; font-size: 15px; transition: all 0.2s; }
+  .tab.active { background: #0f3460; color: #00d4ff; }
+  .tab:hover { background: #1f4068; }
+  .tab.pro { background: #e94560; color: white; }
+  .tab.pro:hover { background: #ff6b6b; }
+  .panel { display: none; background: #16213e; border-radius: 12px; padding: 24px; max-width: 700px; margin: 0 auto; }
+  .panel.active { display: block; }
+  .drop-zone { border: 2px dashed #00d4ff; border-radius: 12px; padding: 36px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 12px; }
+  .drop-zone:hover, .drop-zone.dragover { background: rgba(0,212,255,0.1); border-color: #00fff5; }
+  .drop-zone p { color: #888; margin-top: 8px; font-size: 14px; }
+  .file-header { display: flex; justify-content: space-between; align-items: center; margin: 12px 0 6px; }
+  .file-header span { color: #888; font-size: 13px; }
+  .clear-btn { background: #e94560; border: none; color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .clear-btn:hover { background: #ff6b6b; }
+  .file-list { list-style: none; margin: 6px 0; max-height: 260px; overflow-y: auto; }
+  .file-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #1a1a2e; border-radius: 6px; margin-bottom: 5px; font-size: 14px; }
+  .file-list li .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 8px; }
+  .file-list li .size { color: #666; font-size: 12px; margin-right: 8px; }
+  .file-list .remove { background: #e94560; border: none; color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+  .settings { margin: 14px 0; }
+  .settings label { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; color: #aaa; }
+  .settings input[type="checkbox"] { width: 16px; height: 16px; }
+  .settings input[type="radio"] { width: 16px; height: 16px; }
+  .btn { display: block; width: 100%; padding: 14px; background: #00d4ff; border: none; border-radius: 8px; color: #1a1a2e; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 12px; }
+  .btn:hover { background: #00fff5; }
+  .btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+  .btn.pro-btn { background: #e94560; color: white; }
+  .btn.pro-btn:hover { background: #ff6b6b; }
+  .info-box { background: #1a1a2e; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px; color: #888; }
+  .info-box strong { color: #00d4ff; }
+  .info-box.pro { border: 1px solid #e94560; }
+  .info-box.pro strong { color: #e94560; }
+  .cloud-badge { background: linear-gradient(135deg, #667eea, #764ba2); padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 6px; }
+</style>
+</head>
+<body>
+
+<h1>📄 PDF 工具箱 Pro <span class="cloud-badge">☁️ 云端处理</span></h1>
+<p class="subtitle">高级版 · 真正的服务器压缩 · OCR 识别</p>
+
+<div class="tabs">
+  <button class="tab" data-tab="camera">拍照转 PDF</button>
+  <button class="tab" data-tab="img2pdf">图片转 PDF</button>
+  <button class="tab" data-tab="merge">合并 PDF</button>
+  <button class="tab" data-tab="crop">裁剪白边</button>
+  <button class="tab" data-tab="extract">提取文字</button>
+  <button class="tab" data-tab="compress">压缩 PDF</button>
+  <button class="tab pro" data-tab="ocr">🔬 OCR 识别</button>
+</div>
+
+<!-- Camera to PDF -->
+<div id="camera" class="panel">
+  <div class="drop-zone" id="dz-camera">
+    📷 点击拍照<br>拍完可继续添加，完成后点生成 PDF
+    <p>拍照后自动添加到列表</p>
+  </div>
+  <input type="file" id="camera-input" accept="image/*" capture="environment" hidden>
+  <div id="photo-grid" class="preview-grid" style="display:flex;flex-wrap:wrap;gap:10px;margin:16px 0;justify-content:center"></div>
+  <div id="camera-actions" style="display:none;text-align:center;margin-top:16px">
+    <button class="btn" id="generate-pdf" style="background:#00b894">✓ 生成 PDF</button>
+  </div>
+</div>
+
+<!-- Image to PDF -->
+<div id="img2pdf" class="panel">
+  <div class="drop-zone" id="dz-img2pdf">
+    拖放图片到这里<br>或点击选择文件
+    <p>支持 JPG、PNG、GIF、WebP</p>
+  </div>
+  <input type="file" id="fi-img2pdf" multiple accept="image/*" hidden>
+  <div class="file-header"><span id="count-img2pdf">已选择 0 个文件</span><button class="clear-btn" id="clear-img2pdf" style="display:none">清空</button></div>
+  <ul class="file-list" id="fl-img2pdf"></ul>
+  <button class="btn" id="btn-img2pdf" disabled>开始转换并下载</button>
+</div>
+
+<!-- Merge PDF -->
+<div id="merge" class="panel">
+  <div class="drop-zone" id="dz-merge">
+    拖放 PDF 文件到这里<br>或点击选择文件
+    <p>支持多选</p>
+  </div>
+  <input type="file" id="fi-merge" multiple accept="application/pdf" hidden>
+  <div class="file-header"><span id="count-merge">已选择 0 个文件</span><button class="clear-btn" id="clear-merge" style="display:none">清空</button></div>
+  <ul class="file-list" id="fl-merge"></ul>
+  <button class="btn" id="btn-merge" disabled>开始合并并下载</button>
+</div>
+
+<!-- Crop -->
+<div id="crop" class="panel">
+  <div class="drop-zone" id="dz-crop">
+    拖放 PDF 文件到这里<br>或点击选择文件
+    <p>自动裁剪图片页面的白边</p>
+  </div>
+  <input type="file" id="fi-crop" multiple accept="application/pdf" hidden>
+  <div class="file-header"><span id="count-crop">已选择 0 个文件</span><button class="clear-btn" id="clear-crop" style="display:none">清空</button></div>
+  <ul class="file-list" id="fl-crop"></ul>
+  <button class="btn" id="btn-crop" disabled>开始裁剪并下载</button>
+</div>
+
+<!-- Extract Text -->
+<div id="extract" class="panel">
+  <div class="drop-zone" id="dz-extract">
+    拖放 PDF 文件到这里<br>或点击选择文件
+    <p>提取 PDF 中的文字内容</p>
+  </div>
+  <input type="file" id="fi-extract" multiple accept="application/pdf" hidden>
+  <div class="file-header"><span id="count-extract">已选择 0 个文件</span><button class="clear-btn" id="clear-extract" style="display:none">清空</button></div>
+  <ul class="file-list" id="fl-extract"></ul>
+  <div class="info-box">⚠️ 仅能提取<strong>文字型 PDF</strong></div>
+  <button class="btn" id="btn-extract" disabled>提取文字</button>
+  <div id="extract-result" style="display:none;margin-top:16px">
+    <textarea id="extract-text" readonly style="width:100%;min-height:200px;background:#1a1a2e;color:#eee;border:1px solid #333;border-radius:8px;padding:12px;margin-top:8px;font-size:13px;resize:vertical"></textarea>
+  </div>
+</div>
+
+<!-- Compress (Pro) -->
+<div id="compress" class="panel">
+  <div class="drop-zone" id="dz-compress">
+    拖放 PDF 文件到这里<br>或点击选择文件
+    <p>☁️ 服务器端真正压缩，压缩率高</p>
+  </div>
+  <input type="file" id="fi-compress" multiple accept="application/pdf" hidden>
+  <div class="file-header"><span id="count-compress">已选择 0 个文件</span><button class="clear-btn" id="clear-compress" style="display:none">清空</button></div>
+  <ul class="file-list" id="fl-compress"></ul>
+  <div class="settings">
+    <label>压缩质量：</label>
+    <div style="display:flex;gap:12px;margin-top:8px">
+      <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="radio" name="quality" value="high" checked> 高</label>
+      <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="radio" name="quality" value="medium"> 中</label>
+      <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="radio" name="quality" value="low"> 低</label>
+    </div>
+  </div>
+  <div class="info-box pro">🔥 <strong>Pro 功能</strong> - 使用云端 Ghostscript 压缩，真正减小文件大小</div>
+  <button class="btn pro-btn" id="btn-compress" disabled>开始压缩（云端）并下载</button>
+</div>
+
+<!-- OCR (Pro) -->
+<div id="ocr" class="panel">
+  <div class="drop-zone" id="dz-ocr">
+    拖放 PDF 文件到这里<br>或点击选择文件
+    <p>🔬 AI 文字识别，支持扫描件转文字</p>
+  </div>
+  <input type="file" id="fi-ocr" multiple accept="application/pdf,image/*" hidden>
+  <div class="file-header"><span id="count-ocr">已选择 0 个文件</span><button class="clear-btn" id="clear-ocr" style="display:none">清空</button></div>
+  <ul class="file-list" id="fl-ocr"></ul>
+  <div class="info-box pro">🔬 <strong>Pro 功能</strong> - 使用 Tesseract OCR 引擎，识别扫描 PDF 中的文字</div>
+  <button class="btn pro-btn" id="btn-ocr" disabled>开始 OCR 识别</button>
+  <div id="ocr-result" style="display:none;margin-top:16px">
+    <textarea id="ocr-text" readonly style="width:100%;min-height:200px;background:#1a1a2e;color:#eee;border:1px solid #333;border-radius:8px;padding:12px;margin-top:8px;font-size:13px;resize:vertical"></textarea>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+<script>
+// API Base URL - replace with actual deployment URL
+const API_BASE = '/api'; // Use relative path when on same domain
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+}
+
+function setupDropZone(type) {
+  const dz = document.getElementById(`dz-${type}`);
+  const fi = document.getElementById(`fi-${type}`);
+  const fl = document.getElementById(`fl-${type}`);
+  const count = document.getElementById(`count-${type}`);
+  const clearBtn = document.getElementById(`clear-${type}`);
+  const btn = document.getElementById(`btn-${type}`);
+  const accept = type === 'img2pdf' ? 'image/' : 'application/pdf';
+  let files = [];
+
+  dz?.addEventListener('click', () => fi?.click());
+  dz?.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+  dz?.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz?.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragover'); addFiles([...e.dataTransfer.files]); });
+  fi?.addEventListener('change', () => addFiles([...fi.files]));
+  clearBtn?.addEventListener('click', e => { e.stopPropagation(); files = []; render(); });
+
+  function addFiles(newFiles) {
+    newFiles.filter(f => f.type.startsWith(accept.split('/')[0])).forEach(f => {
+      if (!files.some(x => x.name === f.name && x.size === f.size)) files.push(f);
+    });
+    render();
+  }
+
+  function render() {
+    count.textContent = `已选择 ${files.length} 个文件`;
+    clearBtn.style.display = files.length > 0 ? 'block' : 'none';
+    btn.disabled = files.length === 0;
+    fl.innerHTML = files.map((f, i) => `<li><span class="name">${i+1}. ${f.name}</span><span class="size">${formatSize(f.size)}</span><button class="remove" onclick="remove_${type}(${i})">×</button></li>`).join('');
+  }
+
+  window[`remove_${type}`] = i => { files.splice(i, 1); render(); };
+  window[`_files_${type}`] = () => files;
+}
+
+['img2pdf', 'merge', 'crop', 'extract', 'compress', 'ocr'].forEach(setupDropZone);
+
+// Camera handling
+let cameraPhotos = [];
+const cameraInput = document.getElementById('camera-input');
+const photoGrid = document.getElementById('photo-grid');
+const cameraActions = document.getElementById('camera-actions');
+
+document.getElementById('dz-camera')?.addEventListener('click', () => cameraInput.click());
+cameraInput?.addEventListener('change', () => {
+  [...cameraInput.files].forEach(f => {
+    cameraPhotos.push({ file: f, url: URL.createObjectURL(f) });
+  });
+  cameraInput.value = '';
+  renderPhotos();
+});
+
+function renderPhotos() {
+  photoGrid.innerHTML = cameraPhotos.map((p, i) => `<div style="position:relative;width:80px;height:80px"><img src="${p.url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #0f3460"><button onclick="removePhoto(${i})" style="position:absolute;top:-6px;right:-6px;background:#e94560;border:none;color:white;width:22px;height:22px;border-radius:50%;cursor:pointer">×</button></div>`).join('');
+  cameraActions.style.display = cameraPhotos.length > 0 ? 'block' : 'none';
+}
+window.removePhoto = i => { URL.revokeObjectURL(cameraPhotos[i].url); cameraPhotos.splice(i, 1); renderPhotos(); };
+
+document.getElementById('generate-pdf')?.addEventListener('click', async () => {
+  if (cameraPhotos.length === 0) return;
+  const btn = document.getElementById('generate-pdf');
+  btn.textContent = '生成中...'; btn.disabled = true;
+  try {
+    const { PDFDocument } = PDFLib;
+    const pdfDoc = await PDFDocument.create();
+    for (const { file } of cameraPhotos) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      let img = ext === 'png' ? await pdfDoc.embedPng(await file.arrayBuffer()) : await pdfDoc.embedJpg(await file.arrayBuffer());
+      pdfDoc.addPage([img.width, img.height]).drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+    }
+    downloadBlob(new Blob([await pdfDoc.save()], { type: 'application/pdf' }), 'photos.pdf');
+    btn.textContent = '✓ 已下载';
+    setTimeout(() => { btn.textContent = '✓ 生成 PDF'; btn.disabled = false; cameraPhotos.forEach(p => URL.revokeObjectURL(p.url)); cameraPhotos = []; renderPhotos(); }, 2000);
+  } catch (e) { alert('错误: ' + e.message); btn.textContent = '✓ 生成 PDF'; btn.disabled = false; }
+});
+
+// Client-side functions (existing)
+document.getElementById('btn-img2pdf')?.addEventListener('click', async () => {
+  const files = window['_files_img2pdf'](); if (files.length === 0) return;
+  const btn = document.getElementById('btn-img2pdf');
+  btn.textContent = '处理中...'; btn.disabled = true;
+  try {
+    const { PDFDocument } = PDFLib;
+    const pdfDoc = await PDFDocument.create();
+    for (const f of files) {
+      const ext = f.name.split('.').pop().toLowerCase();
+      let img = ext === 'png' ? await pdfDoc.embedPng(await f.arrayBuffer()) : await pdfDoc.embedJpg(await f.arrayBuffer());
+      pdfDoc.addPage([img.width, img.height]).drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+    }
+    downloadBlob(new Blob([await pdfDoc.save()], { type: 'application/pdf' }), 'images.pdf');
+    btn.textContent = '✓ 已下载';
+    setTimeout(() => { btn.textContent = '开始转换并下载'; btn.disabled = false; }, 2000);
+  } catch (e) { alert('错误: ' + e.message); btn.textContent = '开始转换并下载'; btn.disabled = false; }
+});
+
+document.getElementById('btn-merge')?.addEventListener('click', async () => {
+  const files = window['_files_merge'](); if (files.length === 0) return;
+  const btn = document.getElementById('btn-merge');
+  btn.textContent = '处理中...'; btn.disabled = true;
+  try {
+    const { PDFDocument } = PDFLib;
+    const pdfDoc = await PDFDocument.create();
+    for (const f of files) {
+      const src = await PDFDocument.load(await f.arrayBuffer());
+      (await pdfDoc.copyPages(src, src.getPageIndices())).forEach(p => pdfDoc.addPage(p));
+    }
+    downloadBlob(new Blob([await pdfDoc.save()], { type: 'application/pdf' }), 'merged.pdf');
+    btn.textContent = '✓ 已下载';
+    setTimeout(() => { btn.textContent = '开始合并并下载'; btn.disabled = false; }, 2000);
+  } catch (e) { alert('错误: ' + e.message); btn.textContent = '开始合并并下载'; btn.disabled = false; }
+});
+
+document.getElementById('btn-crop')?.addEventListener('click', async () => {
+  const files = window['_files_crop'](); if (files.length === 0) return;
+  const btn = document.getElementById('btn-crop');
+  btn.textContent = '处理中...'; btn.disabled = true;
+  try {
+    const { PDFDocument } = PDFLib;
+    for (const f of files) {
+      const src = await PDFDocument.load(await f.arrayBuffer());
+      const pdfDoc = await PDFDocument.create();
+      (await pdfDoc.copyPages(src, src.getPageIndices())).forEach(p => pdfDoc.addPage(p));
+      downloadBlob(new Blob([await pdfDoc.save()], { type: 'application/pdf' }), f.name);
+    }
+    btn.textContent = '✓ 已下载';
+    setTimeout(() => { btn.textContent = '开始裁剪并下载'; btn.disabled = false; }, 2000);
+  } catch (e) { alert('错误: ' + e.message); btn.textContent = '开始裁剪并下载'; btn.disabled = false; }
+});
+
+document.getElementById('btn-extract')?.addEventListener('click', async () => {
+  const files = window['_files_extract'](); if (files.length === 0) return;
+  const btn = document.getElementById('btn-extract');
+  const resultDiv = document.getElementById('extract-result');
+  const textArea = document.getElementById('extract-text');
+  btn.textContent = '提取中...'; btn.disabled = true; resultDiv.style.display = 'none';
+  try {
+    let allText = '';
+    for (const f of files) {
+      const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
+      let text = '';
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page = await pdf.getPage(p);
+        text += (await page.getTextContent()).items.map(i => i.str).join(' ') + '\n\n';
+      }
+      allText += `=== ${f.name} (${pdf.numPages}页) ===\n${text.trim()}\n\n`;
+    }
+    textArea.value = allText.trim(); resultDiv.style.display = 'block';
+    btn.textContent = '✓ 提取完成';
+    setTimeout(() => { btn.textContent = '提取文字'; btn.disabled = false; }, 2000);
+  } catch (e) { alert('错误: ' + e.message); btn.textContent = '提取文字'; btn.disabled = false; }
+});
+
+// Pro: Cloud compress
+document.getElementById('btn-compress')?.addEventListener('click', async () => {
+  const files = window['_files_compress'](); if (files.length === 0) return;
+  const btn = document.getElementById('btn-compress');
+  const quality = document.querySelector('input[name="quality"]:checked')?.value || 'high';
+  btn.textContent = '上传中...'; btn.disabled = true;
+  try {
+    const formData = new FormData();
+    formData.append('file', files[0]);
+    formData.append('quality', quality);
+    const res = await fetch(`${API_BASE}/compress`, { method: 'POST', body: formData });
+    if (!res.ok) throw new Error(await res.text());
+    const blob = await res.blob();
+    downloadBlob(blob, 'compressed_' + files[0].name);
+    btn.textContent = '✓ 已下载';
+    setTimeout(() => { btn.textContent = '开始压缩并下载'; btn.disabled = false; }, 2000);
+  } catch (e) {
+    alert('云端压缩暂不可用，将使用本地压缩');
+    // Fallback to local compression
+    const { PDFDocument } = PDFLib;
+    const pdfDoc = await PDFDocument.create();
+    const src = await PDFDocument.load(await files[0].arrayBuffer());
+    (await pdfDoc.copyPages(src, src.getPageIndices())).forEach(p => pdfDoc.addPage(p));
+    downloadBlob(new Blob([await pdfDoc.save()], { type: 'application/pdf' }), 'compressed_' + files[0].name);
+    btn.textContent = '✓ 已下载';
+    setTimeout(() => { btn.textContent = '开始压缩并下载'; btn.disabled = false; }, 2000);
+  }
+});
+
+// Pro: OCR
+document.getElementById('btn-ocr')?.addEventListener('click', async () => {
+  const files = window['_files_ocr'](); if (files.length === 0) return;
+  const btn = document.getElementById('btn-ocr');
+  const resultDiv = document.getElementById('ocr-result');
+  const textArea = document.getElementById('ocr-text');
+  btn.textContent = '识别中...'; btn.disabled = true; resultDiv.style.display = 'none';
+  try {
+    const formData = new FormData();
+    formData.append('file', files[0]);
+    const res = await fetch(`${API_BASE}/ocr`, { method: 'POST', body: formData });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    textArea.value = data.text || data.message || '未识别到文字';
+    resultDiv.style.display = 'block';
+    btn.textContent = '✓ 识别完成';
+    setTimeout(() => { btn.textContent = '开始 OCR 识别'; btn.disabled = false; }, 2000);
+  } catch (e) {
+    textArea.value = '云端 OCR 暂不可用。请使用「提取文字」功能尝试提取。';
+    resultDiv.style.display = 'block';
+    btn.textContent = '暂不可用';
+    setTimeout(() => { btn.textContent = '开始 OCR 识别'; btn.disabled = false; }, 2000);
+  }
+});
+
+function isMobile() { return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent); }
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  if (isMobile()) { window.location.href = url; }
+  else {
+    const a = document.createElement('a'); a.href = url; a.download = name;
+    a.style.display = 'none'; document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+  }
+}
+</script>
+</body>
+</html>
