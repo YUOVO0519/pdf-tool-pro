@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { PDFDocument } from 'pdf-lib';
-import { put, del } from '@vercel/blob';
+import { put } from '@vercel/blob';
+import Busboy from 'busboy';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -12,6 +13,28 @@ export const config = {
     bodyParser: false,
   },
 };
+
+function parseMultipart(req: VercelRequest): Promise<File[]> {
+  return new Promise((resolve, reject) => {
+    const files: File[] = [];
+    const bb = Busboy({ headers: req.headers });
+    
+    bb.on('file', (name, stream, info) => {
+      const chunks: Buffer[] = [];
+      stream.on('data', (chunk: Buffer) => chunks.push(chunk));
+      stream.on('end', () => {
+        const buffer = Buffer.concat(chunks);
+        const file = new File([buffer], info.filename || 'file', { type: info.mimeType });
+        files.push(file);
+      });
+    });
+    
+    bb.on('error', reject);
+    bb.on('finish', () => resolve(files));
+    
+    req.body.pipe(bb);
+  });
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -29,15 +52,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
+    const files = await parseMultipart(req);
     
-    if (!file) {
+    if (files.length === 0) {
       res.status(400).json({ error: 'No file provided' });
       return;
     }
 
-    const srcPdf = await PDFDocument.load(await file.arrayBuffer());
+    const srcPdf = await PDFDocument.load(await files[0].arrayBuffer());
     const pdfDoc = await PDFDocument.create();
     const pages = await pdfDoc.copyPages(srcPdf, srcPdf.getPageIndices());
     pages.forEach(page => pdfDoc.addPage(page));
@@ -46,7 +68,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const timestamp = Date.now();
     const filename = `cropped_${timestamp}.pdf`;
     
-    const blob = await put(filename, cropped, { access: 'public' });
+    const blob = await put(filename, Buffer.from(cropped), { access: 'public' });
 
     res.json({
       success: true,

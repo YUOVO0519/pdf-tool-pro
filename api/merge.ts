@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { PDFDocument } from 'pdf-lib';
-import { put, del } from '@vercel/blob';
+import { put } from '@vercel/blob';
+import Busboy from 'busboy';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +14,28 @@ export const config = {
     bodyParser: false,
   },
 };
+
+function parseMultipart(req: VercelRequest): Promise<File[]> {
+  return new Promise((resolve, reject) => {
+    const files: File[] = [];
+    const bb = Busboy({ headers: req.headers });
+    
+    bb.on('file', (name, stream, info) => {
+      const chunks: Buffer[] = [];
+      stream.on('data', (chunk: Buffer) => chunks.push(chunk));
+      stream.on('end', () => {
+        const buffer = Buffer.concat(chunks);
+        const file = new File([buffer], info.filename || 'file', { type: info.mimeType });
+        files.push(file);
+      });
+    });
+    
+    bb.on('error', reject);
+    bb.on('finish', () => resolve(files));
+    
+    req.body.pipe(bb);
+  });
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -30,8 +53,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const formData = await req.formData();
-    const files = formData.getAll('files') as File[];
+    const files = await parseMultipart(req);
     
     if (files.length < 2) {
       res.status(400).json({ error: 'Need at least 2 PDF files to merge' });
@@ -51,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const timestamp = Date.now();
     const filename = `merged_${timestamp}.pdf`;
     
-    const blob = await put(filename, merged, { access: 'public' });
+    const blob = await put(filename, Buffer.from(merged), { access: 'public' });
 
     res.json({
       success: true,
