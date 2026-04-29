@@ -8,29 +8,29 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   
   :root {
-    --primary: #6366f1;
-    --primary-dark: #4f46e5;
-    --secondary: #ec4899;
-    --accent: #06b6d4;
-    --bg-dark: #0f0f23;
-    --bg-card: #1a1a2e;
-    --bg-card-hover: #252542;
-    --text: #f1f5f9;
-    --text-muted: #94a3b8;
-    --border: #334155;
-    --success: #10b981;
-    --danger: #ef4444;
+    --bili-pink: #FB7299;
+    --bili-pink-dark: #E85E87;
+    --bili-blue: #23ADE5;
+    --bili-blue-dark: #1A9ECE;
+    --bg-dark: #1a1a2e;
+    --bg-card: #252542;
+    --bg-card-hover: #2f2f52;
+    --text: #ffffff;
+    --text-muted: #a0a0b8;
+    --border: #3a3a5c;
+    --success: #51D27A;
+    --danger: #F45C5C;
   }
   
   body {
-    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Microsoft YaHei', 'PingFang SC', -apple-system, sans-serif;
     background: var(--bg-dark);
     color: var(--text);
     min-height: 100vh;
     padding: 20px;
     background-image: 
-      radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+      radial-gradient(ellipse at 0% 0%, rgba(251, 118, 153, 0.2) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 100%, rgba(35, 173, 229, 0.15) 0%, transparent 50%);
   }
 
   /* Header */
@@ -41,68 +41,108 @@
     margin: 0 auto;
   }
   
-  .header-img {
+  .avatar-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 20px;
+  }
+  
+  .avatar-ring {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    padding: 4px;
+    background: linear-gradient(135deg, var(--bili-pink), var(--bili-blue));
+    animation: spin 8s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .avatar-ring img, .avatar-ring span {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: block;
+    background: var(--bg-card);
+  }
+  
+  .avatar-icon {
     width: 140px;
     height: 140px;
     border-radius: 50%;
     object-fit: cover;
-    border: 4px solid var(--primary);
-    box-shadow: 0 0 40px rgba(99, 102, 241, 0.4);
-    margin-bottom: 20px;
-    animation: float 3s ease-in-out infinite;
+    border: none;
   }
   
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+  .online-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    background: var(--success);
+    border-radius: 50%;
+    border: 3px solid var(--bg-dark);
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
   }
   
   h1 {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     font-weight: 800;
-    background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+    color: white;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 10px rgba(251, 118, 153, 0.5);
+  }
+  
+  h1 span {
+    background: linear-gradient(135deg, var(--bili-pink), var(--bili-blue));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 10px;
-    letter-spacing: -1px;
   }
   
   .subtitle {
     color: var(--text-muted);
     font-size: 1rem;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
   }
   
-  .badge-container {
+  .tag-area {
     display: flex;
     gap: 10px;
     justify-content: center;
     flex-wrap: wrap;
   }
   
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
+  .tag {
+    padding: 8px 16px;
     border-radius: 20px;
     font-size: 0.85rem;
     font-weight: 500;
   }
   
-  .badge-primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  .tag-pink {
+    background: linear-gradient(135deg, var(--bili-pink), var(--bili-pink-dark));
     color: white;
+    box-shadow: 0 4px 15px rgba(251, 118, 153, 0.4);
   }
   
-  .badge-success {
-    background: rgba(16, 185, 129, 0.2);
-    color: var(--success);
-    border: 1px solid rgba(16, 185, 129, 0.3);
+  .tag-blue {
+    background: linear-gradient(135deg, var(--bili-blue), var(--bili-blue-dark));
+    color: white;
+    box-shadow: 0 4px 15px rgba(35, 173, 229, 0.4);
   }
   
-  /* Tab Navigation */
+  /* Navigation */
   .nav-container {
     max-width: 800px;
     margin: 0 auto 24px;
@@ -113,10 +153,10 @@
   
   .nav {
     display: flex;
-    gap: 8px;
-    background: rgba(26, 26, 46, 0.9);
+    gap: 6px;
+    background: rgba(37, 37, 66, 0.95);
     backdrop-filter: blur(20px);
-    padding: 10px;
+    padding: 8px;
     border-radius: 16px;
     border: 1px solid var(--border);
     overflow-x: auto;
@@ -126,7 +166,7 @@
   .nav::-webkit-scrollbar { display: none; }
   
   .tab {
-    padding: 10px 18px;
+    padding: 10px 16px;
     background: transparent;
     border: none;
     color: var(--text-muted);
@@ -135,7 +175,7 @@
     font-size: 0.9rem;
     font-weight: 500;
     white-space: nowrap;
-    transition: all 0.2s;
+    transition: all 0.25s;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -147,12 +187,10 @@
   }
   
   .tab.active {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    background: linear-gradient(135deg, var(--bili-pink), var(--bili-blue));
     color: white;
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 4px 15px rgba(251, 118, 153, 0.35);
   }
-  
-  .tab-icon { font-size: 1.1rem; }
   
   /* Panels */
   .panel {
@@ -163,42 +201,47 @@
     max-width: 700px;
     margin: 0 auto;
     border: 1px solid var(--border);
-    animation: fadeIn 0.3s ease;
+    animation: slideUp 0.3s ease;
   }
   
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(15px); }
     to { opacity: 1; transform: translateY(0); }
   }
   
   .panel.active { display: block; }
   
+  .panel-header {
+    margin-bottom: 20px;
+  }
+  
   .panel-title {
-    font-size: 1.3rem;
+    font-size: 1.4rem;
     font-weight: 700;
-    margin-bottom: 6px;
+    color: white;
     display: flex;
     align-items: center;
     gap: 10px;
   }
   
+  .panel-title-icon {
+    font-size: 1.5rem;
+  }
+  
   .panel-desc {
     color: var(--text-muted);
     font-size: 0.9rem;
-    margin-bottom: 20px;
+    margin-top: 6px;
   }
   
   /* Drop Zone */
   .drop-zone {
-    border: 2px dashed transparent;
+    border: 2px dashed var(--border);
     border-radius: 16px;
     padding: 50px 30px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s;
-    background: 
-      linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
-      linear-gradient(135deg, var(--primary), var(--secondary)) border-box;
     position: relative;
     overflow: hidden;
   }
@@ -207,7 +250,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(236, 72, 153, 0.05));
+    background: linear-gradient(135deg, rgba(251, 118, 153, 0.08), rgba(35, 173, 229, 0.08));
     opacity: 0;
     transition: opacity 0.3s;
   }
@@ -216,23 +259,26 @@
   .drop-zone.dragover::before { opacity: 1; }
   
   .drop-zone:hover, .drop-zone.dragover {
-    border-color: var(--accent);
+    border-color: var(--bili-pink);
+    border-style: solid;
     transform: scale(1.01);
   }
   
-  .drop-zone-icon {
-    font-size: 3rem;
+  .drop-icon {
+    font-size: 3.5rem;
     margin-bottom: 15px;
     display: block;
+    filter: drop-shadow(0 4px 10px rgba(251, 118, 153, 0.3));
   }
   
-  .drop-zone-text {
+  .drop-text {
     font-size: 1.1rem;
     font-weight: 600;
+    color: white;
     margin-bottom: 8px;
   }
   
-  .drop-zone-hint {
+  .drop-hint {
     color: var(--text-muted);
     font-size: 0.85rem;
   }
@@ -243,7 +289,6 @@
     justify-content: space-between;
     align-items: center;
     margin: 16px 0 10px;
-    padding: 0 4px;
   }
   
   .file-count {
@@ -253,8 +298,8 @@
   }
   
   .clear-btn {
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: rgba(244, 92, 92, 0.15);
+    border: 1px solid rgba(244, 92, 92, 0.3);
     color: var(--danger);
     padding: 6px 14px;
     border-radius: 8px;
@@ -265,12 +310,12 @@
   }
   
   .clear-btn:hover {
-    background: rgba(239, 68, 68, 0.25);
+    background: rgba(244, 92, 92, 0.25);
   }
   
   .file-list {
     list-style: none;
-    max-height: 280px;
+    max-height: 260px;
     overflow-y: auto;
     padding-right: 5px;
     scrollbar-width: thin;
@@ -280,32 +325,32 @@
   .file-list::-webkit-scrollbar { width: 6px; }
   .file-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   
-  .file-list li {
+  .file-item {
     display: flex;
     align-items: center;
     padding: 12px 14px;
     background: var(--bg-dark);
-    border-radius: 10px;
+    border-radius: 12px;
     margin-bottom: 8px;
     border: 1px solid var(--border);
     transition: all 0.2s;
   }
   
-  .file-list li:hover {
-    border-color: var(--primary);
+  .file-item:hover {
+    border-color: var(--bili-pink);
     background: var(--bg-card-hover);
   }
   
   .file-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--bili-pink), var(--bili-blue));
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 12px;
-    font-size: 1rem;
+    font-size: 1.1rem;
+    margin-right: 14px;
     flex-shrink: 0;
   }
   
@@ -325,16 +370,16 @@
   .file-size {
     color: var(--text-muted);
     font-size: 0.8rem;
-    margin-top: 2px;
+    margin-top: 3px;
   }
   
-  .file-remove {
-    background: rgba(239, 68, 68, 0.15);
+  .file-del {
+    background: rgba(244, 92, 92, 0.15);
     border: none;
     color: var(--danger);
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 1rem;
     transition: all 0.2s;
@@ -344,7 +389,7 @@
     flex-shrink: 0;
   }
   
-  .file-remove:hover {
+  .file-del:hover {
     background: var(--danger);
     color: white;
   }
@@ -357,7 +402,7 @@
     gap: 10px;
     width: 100%;
     padding: 16px 24px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    background: linear-gradient(135deg, var(--bili-pink), var(--bili-pink-dark));
     border: none;
     border-radius: 12px;
     color: white;
@@ -366,12 +411,12 @@
     cursor: pointer;
     margin-top: 20px;
     transition: all 0.3s;
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 15px rgba(251, 118, 153, 0.35);
   }
   
   .btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 6px 20px rgba(251, 118, 153, 0.45);
   }
   
   .btn:disabled {
@@ -381,25 +426,48 @@
     box-shadow: none;
   }
   
-  .btn-success {
-    background: linear-gradient(135deg, var(--success), #059669);
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  .btn-blue {
+    background: linear-gradient(135deg, var(--bili-blue), var(--bili-blue-dark));
+    box-shadow: 0 4px 15px rgba(35, 173, 229, 0.35);
   }
   
-  .btn-success:hover:not(:disabled) {
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  .btn-blue:hover:not(:disabled) {
+    box-shadow: 0 6px 20px rgba(35, 173, 229, 0.45);
   }
   
-  .btn-secondary {
-    background: var(--bg-card-hover);
+  .btn-outline {
+    background: transparent;
     border: 1px solid var(--border);
+    color: var(--text);
     box-shadow: none;
   }
   
-  .btn-secondary:hover:not(:disabled) {
-    border-color: var(--primary);
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+  .btn-outline:hover:not(:disabled) {
+    border-color: var(--bili-pink);
+    background: rgba(251, 118, 153, 0.1);
+    box-shadow: none;
   }
+  
+  /* Info Box */
+  .info-box {
+    padding: 14px 16px;
+    background: rgba(251, 118, 153, 0.1);
+    border: 1px solid rgba(251, 118, 153, 0.2);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin: 16px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .info-box.warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.2);
+  }
+  
+  .info-icon { font-size: 1.1rem; flex-shrink: 0; }
   
   /* Settings */
   .settings {
@@ -419,7 +487,7 @@
   
   .radio-group {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
   }
   
@@ -437,32 +505,59 @@
   }
   
   .radio-label:has(input:checked) {
-    border-color: var(--primary);
-    background: rgba(99, 102, 241, 0.1);
+    border-color: var(--bili-pink);
+    background: rgba(251, 118, 153, 0.15);
   }
   
   .radio-label input { display: none; }
   
-  /* Info Box */
-  .info-box {
-    padding: 14px 16px;
-    background: rgba(99, 102, 241, 0.1);
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    border-radius: 12px;
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    margin: 16px 0;
+  /* Checkbox */
+  .checkbox-label {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 12px 16px;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: all 0.2s;
+    margin-top: 12px;
   }
   
-  .info-box.warning {
-    background: rgba(245, 158, 11, 0.1);
-    border-color: rgba(245, 158, 11, 0.2);
+  .checkbox-label:has(input:checked) {
+    border-color: var(--bili-pink);
+    background: rgba(251, 118, 153, 0.1);
   }
   
-  .info-box-icon { font-size: 1.1rem; flex-shrink: 0; }
+  .checkbox-label input { display: none; }
+  
+  .checkbox-box {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  
+  .checkbox-label:has(input:checked) .checkbox-box {
+    background: var(--bili-pink);
+    border-color: var(--bili-pink);
+  }
+  
+  .checkbox-box::after {
+    content: '✓';
+    color: white;
+    font-size: 0.75rem;
+    display: none;
+  }
+  
+  .checkbox-label:has(input:checked) .checkbox-box::after { display: block; }
   
   /* Camera */
   .camera-area {
@@ -474,53 +569,53 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 18px 36px;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    padding: 18px 40px;
+    background: linear-gradient(135deg, var(--bili-pink), var(--bili-blue));
     border: none;
     border-radius: 50px;
     color: white;
     font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 4px 20px rgba(251, 118, 153, 0.4);
     transition: all 0.3s;
   }
   
   .camera-btn:hover {
     transform: scale(1.05);
-    box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
+    box-shadow: 0 6px 25px rgba(251, 118, 153, 0.5);
   }
   
   .camera-tip {
     color: var(--text-muted);
-    margin-top: 12px;
+    margin-top: 14px;
     font-size: 0.9rem;
   }
   
   .preview-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 14px;
     justify-content: center;
-    margin-top: 20px;
+    margin-top: 24px;
   }
   
   .photo-item {
     position: relative;
-    width: 100px;
-    height: 100px;
+    width: 105px;
+    height: 105px;
   }
   
   .photo-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 12px;
-    border: 3px solid var(--primary);
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    border-radius: 14px;
+    border: 3px solid var(--bili-pink);
+    box-shadow: 0 4px 15px rgba(251, 118, 153, 0.35);
   }
   
-  .photo-item .del-photo {
+  .photo-del {
     position: absolute;
     top: -8px;
     right: -8px;
@@ -535,19 +630,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+    box-shadow: 0 2px 8px rgba(244, 92, 92, 0.4);
   }
   
   .camera-actions {
     display: flex;
     gap: 12px;
     justify-content: center;
-    margin-top: 20px;
+    margin-top: 24px;
   }
   
   .camera-actions .btn {
     flex: 1;
-    max-width: 200px;
+    max-width: 180px;
     margin: 0;
   }
   
@@ -567,69 +662,20 @@
   
   textarea:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: var(--bili-pink);
   }
   
   /* Footer */
   .footer {
     text-align: center;
-    padding: 40px 20px;
+    padding: 50px 20px 30px;
     color: var(--text-muted);
     font-size: 0.85rem;
   }
   
   .footer a {
-    color: var(--primary);
+    color: var(--bili-pink);
     text-decoration: none;
-  }
-  
-  /* Checkbox styling */
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    padding: 12px 16px;
-    background: var(--bg-dark);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    transition: all 0.2s;
-  }
-  
-  .checkbox-label:has(input:checked) {
-    border-color: var(--primary);
-    background: rgba(99, 102, 241, 0.1);
-  }
-  
-  .checkbox-label input { display: none; }
-  
-  .custom-checkbox {
-    width: 22px;
-    height: 22px;
-    border: 2px solid var(--border);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    flex-shrink: 0;
-  }
-  
-  .checkbox-label:has(input:checked) .custom-checkbox {
-    background: var(--primary);
-    border-color: var(--primary);
-  }
-  
-  .custom-checkbox::after {
-    content: '✓';
-    color: white;
-    font-size: 0.8rem;
-    display: none;
-  }
-  
-  .checkbox-label:has(input:checked) .custom-checkbox::after {
-    display: block;
   }
 </style>
 </head>
@@ -637,12 +683,19 @@
 
 <!-- Header -->
 <div class="header">
-  <img src="https://www.minimaxi.com/favicon.ico" alt="Miku" class="header-img" onerror="this.style.display='none'">
-  <h1>📄 PDF 工具箱</h1>
-  <p class="subtitle">纯本地处理，保护隐私</p>
-  <div class="badge-container">
-    <span class="badge badge-primary">🔒 隐私安全</span>
-    <span class="badge badge-success">☁️ 无需上传</span>
+  <div class="avatar-wrapper">
+    <div class="avatar-ring">
+      <img src="/api/avatar" alt="Miku" class="avatar-icon" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🎀</text></svg>'">
+    </div>
+    <div class="online-badge"></div>
+  </div>
+  
+  <h1>PDF <span>工具箱</span></h1>
+  <p class="subtitle">纯净本地处理 · 保护隐私安全</p>
+  
+  <div class="tag-area">
+    <span class="tag tag-pink">🔒 隐私保护</span>
+    <span class="tag tag-blue">💻 本地处理</span>
   </div>
 </div>
 
@@ -650,30 +703,35 @@
 <div class="nav-container">
   <nav class="nav">
     <button class="tab active" data-tab="camera">
-      <span class="tab-icon">📷</span> 拍照
+      <span>📷</span> 拍照
     </button>
     <button class="tab" data-tab="img2pdf">
-      <span class="tab-icon">🖼️</span> 图片
+      <span>🖼️</span> 图片
     </button>
     <button class="tab" data-tab="merge">
-      <span class="tab-icon">🔗</span> 合并
+      <span>🔗</span> 合并
     </button>
     <button class="tab" data-tab="crop">
-      <span class="tab-icon">✂️</span> 裁剪
+      <span>✂️</span> 裁剪
     </button>
     <button class="tab" data-tab="extract">
-      <span class="tab-icon">📝</span> 文字
+      <span>📝</span> 文字
     </button>
     <button class="tab" data-tab="compress">
-      <span class="tab-icon">🗜️</span> 压缩
+      <span>🗜️</span> 压缩
     </button>
   </nav>
 </div>
 
 <!-- Camera Panel -->
 <div id="camera" class="panel active">
-  <div class="panel-title">📷 拍照转 PDF</div>
-  <div class="panel-desc">拍下照片，快速生成 PDF 文档</div>
+  <div class="panel-header">
+    <div class="panel-title">
+      <span class="panel-title-icon">📷</span>
+      拍照转 PDF
+    </div>
+    <p class="panel-desc">拍下照片，快速生成 PDF 文档</p>
+  </div>
   
   <div class="camera-area">
     <button class="camera-btn" id="open-camera">
@@ -687,10 +745,10 @@
   <div id="photo-grid" class="preview-grid"></div>
   
   <div id="camera-actions" class="camera-actions" style="display:none">
-    <button class="btn btn-secondary" id="add-more-photo">
+    <button class="btn btn-outline" id="add-more-photo">
       📷 继续拍
     </button>
-    <button class="btn btn-success" id="generate-pdf">
+    <button class="btn btn-blue" id="generate-pdf">
       ✓ 生成 PDF
     </button>
   </div>
@@ -698,13 +756,18 @@
 
 <!-- Image to PDF Panel -->
 <div id="img2pdf" class="panel">
-  <div class="panel-title">🖼️ 图片转 PDF</div>
-  <div class="panel-desc">将多张图片合并为一个 PDF 文件</div>
+  <div class="panel-header">
+    <div class="panel-title">
+      <span class="panel-title-icon">🖼️</span>
+      图片转 PDF
+    </div>
+    <p class="panel-desc">将多张图片合并为一个 PDF 文件</p>
+  </div>
   
   <div class="drop-zone" id="dz-img2pdf">
-    <span class="drop-zone-icon">📤</span>
-    <div class="drop-zone-text">拖放图片到这里</div>
-    <div class="drop-zone-hint">或点击选择文件 · 支持 JPG、PNG、WebP</div>
+    <span class="drop-icon">📤</span>
+    <div class="drop-text">拖放图片到这里</div>
+    <div class="drop-hint">或点击选择文件 · 支持 JPG、PNG、WebP</div>
   </div>
   <input type="file" id="fi-img2pdf" multiple accept="image/*" hidden>
   
@@ -716,22 +779,27 @@
   
   <label class="checkbox-label">
     <input type="checkbox" id="crop-img2pdf" checked>
-    <span class="custom-checkbox"></span>
+    <span class="checkbox-box"></span>
     统一尺寸（按第一张图）
   </label>
   
   <button class="btn" id="btn-img2pdf" disabled>开始转换并下载</button>
 </div>
 
-<!-- Merge PDF Panel -->
+<!-- Merge Panel -->
 <div id="merge" class="panel">
-  <div class="panel-title">🔗 合并 PDF</div>
-  <div class="panel-desc">将多个 PDF 文件合并为一个</div>
+  <div class="panel-header">
+    <div class="panel-title">
+      <span class="panel-title-icon">🔗</span>
+      合并 PDF
+    </div>
+    <p class="panel-desc">将多个 PDF 文件合并为一个</p>
+  </div>
   
   <div class="drop-zone" id="dz-merge">
-    <span class="drop-zone-icon">📤</span>
-    <div class="drop-zone-text">拖放 PDF 文件到这里</div>
-    <div class="drop-zone-hint">支持多选，可拖拽调整顺序</div>
+    <span class="drop-icon">📤</span>
+    <div class="drop-text">拖放 PDF 文件到这里</div>
+    <div class="drop-hint">支持多选</div>
   </div>
   <input type="file" id="fi-merge" multiple accept="application/pdf" hidden>
   
@@ -742,7 +810,7 @@
   <ul class="file-list" id="fl-merge"></ul>
   
   <div class="info-box">
-    <span class="info-box-icon">💡</span>
+    <span class="info-icon">💡</span>
     <span>拖拽文件可调整顺序</span>
   </div>
   
@@ -751,13 +819,18 @@
 
 <!-- Crop Panel -->
 <div id="crop" class="panel">
-  <div class="panel-title">✂️ 裁剪白边</div>
-  <div class="panel-desc">自动裁剪 PDF 图片页面的白边</div>
+  <div class="panel-header">
+    <div class="panel-title">
+      <span class="panel-title-icon">✂️</span>
+      裁剪白边
+    </div>
+    <p class="panel-desc">自动裁剪 PDF 图片页面的白边</p>
+  </div>
   
   <div class="drop-zone" id="dz-crop">
-    <span class="drop-zone-icon">📤</span>
-    <div class="drop-zone-text">拖放 PDF 文件到这里</div>
-    <div class="drop-zone-hint">自动识别并裁剪白边</div>
+    <span class="drop-icon">📤</span>
+    <div class="drop-text">拖放 PDF 文件到这里</div>
+    <div class="drop-hint">自动识别并裁剪白边</div>
   </div>
   <input type="file" id="fi-crop" multiple accept="application/pdf" hidden>
   
@@ -770,15 +843,20 @@
   <button class="btn" id="btn-crop" disabled>开始裁剪并下载</button>
 </div>
 
-<!-- Extract Text Panel -->
+<!-- Extract Panel -->
 <div id="extract" class="panel">
-  <div class="panel-title">📝 提取文字</div>
-  <div class="panel-desc">从 PDF 中提取文字内容</div>
+  <div class="panel-header">
+    <div class="panel-title">
+      <span class="panel-title-icon">📝</span>
+      提取文字
+    </div>
+    <p class="panel-desc">从 PDF 中提取文字内容</p>
+  </div>
   
   <div class="drop-zone" id="dz-extract">
-    <span class="drop-zone-icon">📤</span>
-    <div class="drop-zone-text">拖放 PDF 文件到这里</div>
-    <div class="drop-zone-hint">仅支持文字型 PDF</div>
+    <span class="drop-icon">📤</span>
+    <div class="drop-text">拖放 PDF 文件到这里</div>
+    <div class="drop-hint">仅支持文字型 PDF</div>
   </div>
   <input type="file" id="fi-extract" multiple accept="application/pdf" hidden>
   
@@ -789,7 +867,7 @@
   <ul class="file-list" id="fl-extract"></ul>
   
   <div class="info-box warning">
-    <span class="info-box-icon">⚠️</span>
+    <span class="info-icon">⚠️</span>
     <span>仅能提取文字型 PDF，扫描版图片无法提取</span>
   </div>
   
@@ -806,13 +884,18 @@
 
 <!-- Compress Panel -->
 <div id="compress" class="panel">
-  <div class="panel-title">🗜️ 压缩 PDF</div>
-  <div class="panel-desc">减小 PDF 文件大小</div>
+  <div class="panel-header">
+    <div class="panel-title">
+      <span class="panel-title-icon">🗜️</span>
+      压缩 PDF
+    </div>
+    <p class="panel-desc">减小 PDF 文件大小</p>
+  </div>
   
   <div class="drop-zone" id="dz-compress">
-    <span class="drop-zone-icon">📤</span>
-    <div class="drop-zone-text">拖放 PDF 文件到这里</div>
-    <div class="drop-zone-hint">支持多选批量压缩</div>
+    <span class="drop-icon">📤</span>
+    <div class="drop-text">拖放 PDF 文件到这里</div>
+    <div class="drop-hint">支持多选批量压缩</div>
   </div>
   <input type="file" id="fi-compress" multiple accept="application/pdf" hidden>
   
@@ -845,7 +928,7 @@
 
 <!-- Footer -->
 <div class="footer">
-  <p>Made with 💜 by <a href="#">Miku</a> · 保护隐私，本地处理</p>
+  <p>Made with 💜 by <a href="#">Miku</a> · 本地处理保护隐私</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
@@ -899,13 +982,13 @@ function setupDropZone(type) {
     fl.innerHTML = files.map((f, i) => {
       const icon = type === 'merge' || type === 'crop' || type === 'compress' ? '📄' : '🖼️';
       return `
-        <li>
+        <li class="file-item">
           <div class="file-icon">${icon}</div>
           <div class="file-info">
             <div class="file-name">${f.name}</div>
             <div class="file-size">${formatSize(f.size)}</div>
           </div>
-          <button class="file-remove" onclick="remove_${type}(${i})">×</button>
+          <button class="file-del" onclick="remove_${type}(${i})">×</button>
         </li>
       `;
     }).join('');
@@ -941,7 +1024,7 @@ function renderPhotoGrid() {
   photoGrid.innerHTML = cameraPhotos.map((p, i) => `
     <div class="photo-item">
       <img src="${p.url}" alt="photo ${i+1}">
-      <button class="del-photo" onclick="removePhoto(${i})">×</button>
+      <button class="photo-del" onclick="removePhoto(${i})">×</button>
     </div>
   `).join('');
   cameraActions.style.display = cameraPhotos.length > 0 ? 'flex' : 'none';
