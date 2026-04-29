@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { PDFDocument } from 'pdf-lib';
 import { put } from '@vercel/blob';
-import formidable from 'formidable';
+import { parseMultipart, getBoundary } from './utils';
 
 export const config = {
   api: {
@@ -25,39 +25,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const form = formidable({ multiples: true });
-    const fields = await form.parse(req as any);
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of req as any) {
+      chunks.push(chunk);
+    }
+    const buffer = Buffer.concat(chunks);
     
-    // Get all files
-    let fileList: any[] = [];
-    const files = fields[1];
-    for (const key in files) {
-      const val = files[key];
-      if (Array.isArray(val)) {
-        fileList.push(...val);
-      } else {
-        fileList.push(val);
-      }
+    const contentType = req.headers['content-type'] || '';
+    const boundary = getBoundary(contentType);
+    
+    if (!boundary) {
+      res.status(400).json({ error: 'Missing boundary' });
+      return;
     }
     
-    if (fileList.length === 0) {
+    const { files } = parseMultipart(buffer, boundary);
+    
+    if (files.length === 0) {
       res.status(400).json({ error: 'No files provided' });
       return;
     }
 
     const pdfDoc = await PDFDocument.create();
-    const fs = await import('fs');
     
-    for (const file of fileList) {
-      if (!file || !file.path) continue;
-      const data = fs.readFileSync(file.path);
-      const ext = file.originalFilename?.split('.').pop().toLowerCase() || 'jpg';
+    for (const file of files) {
+      const ext = file.filename.split('.').pop().toLowerCase();
       
       let img;
       if (ext === 'png') {
-        img = await pdfDoc.embedPng(data);
+        img = await pdfDoc.embedPng(file.data);
       } else {
-        img = await pdfDoc.embedJpg(data);
+        img = await pdfDoc.embedJpg(file.data);
       }
       
       pdfDoc.addPage([img.width, img.height]).drawImage(img, {
@@ -78,7 +76,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: true,
       downloadUrl: blob.url,
       fileName: filename,
-      imageCount: fileList.length,
+      imageCount: files.length,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);

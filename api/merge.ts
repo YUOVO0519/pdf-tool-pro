@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { PDFDocument } from 'pdf-lib';
 import { put } from '@vercel/blob';
-import formidable from 'formidable';
+import { parseMultipart, getBoundary } from './utils';
 
 export const config = {
   api: {
@@ -25,25 +25,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const form = formidable();
-    const fields = await form.parse(req as any);
+    // Collect all chunks
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of req as any) {
+      chunks.push(chunk);
+    }
+    const buffer = Buffer.concat(chunks);
     
-    // fields[0] contains the fields, fields[1] contains the files
-    const files = fields[1]['files[]'] || fields[1]['files'] || [];
-    const fileArray = Array.isArray(files) ? files : [files];
+    const contentType = req.headers['content-type'] || '';
+    const boundary = getBoundary(contentType);
     
-    if (fileArray.length < 2) {
+    if (!boundary) {
+      res.status(400).json({ error: 'Missing boundary' });
+      return;
+    }
+    
+    const { files } = parseMultipart(buffer, boundary);
+    
+    if (files.length < 2) {
       res.status(400).json({ error: 'Need at least 2 PDF files to merge' });
       return;
     }
 
     const pdfDoc = await PDFDocument.create();
     
-    for (const file of fileArray) {
-      if (!file || !file.path) continue;
-      const fs = await import('fs');
-      const data = fs.readFileSync(file.path);
-      const srcPdf = await PDFDocument.load(data);
+    for (const file of files) {
+      const srcPdf = await PDFDocument.load(file.data);
       const pages = await pdfDoc.copyPages(srcPdf, srcPdf.getPageIndices());
       pages.forEach(page => pdfDoc.addPage(page));
     }
@@ -58,7 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: true,
       downloadUrl: blob.url,
       fileName: filename,
-      fileCount: fileArray.length,
+      fileCount: files.length,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
