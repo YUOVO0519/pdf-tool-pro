@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@types/node": "^20.0.0",
+    "@vercel/blob": "^2.3.3",
     "pdf-lib": "^1.17.1",
     "typescript": "^5.0.0"
   },
