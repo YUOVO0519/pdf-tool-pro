@@ -185,6 +185,41 @@ function formatSize(bytes) {
   return (bytes / 1024 / 1024).toFixed(1) + ' MB';
 }
 
+// Client-side image compression to handle Vercel 4.5MB limit
+async function compressImageIfNeeded(file, maxSizeMB = 4) {
+  if (file.size < maxSizeMB * 1024 * 1024) return file;
+  
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+      
+      const maxDim = 2000;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height / width) * maxDim);
+          width = maxDim;
+        } else {
+          width = Math.round((width / height) * maxDim);
+          height = maxDim;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      canvas.toBlob((blob) => {
+        resolve(new File([blob], file.name, { type: file.type }));
+      }, file.type, 0.85);
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 function setupDropZone(type) {
   const dz = document.getElementById(`dz-${type}`);
   const fi = document.getElementById(`fi-${type}`);
@@ -268,14 +303,17 @@ async function cloudProcess(action, formData) {
   return res.json();
 }
 
-// img2pdf - Cloud
+// img2pdf - Cloud (with client-side compression for 4.5MB limit)
 document.getElementById('btn-img2pdf')?.addEventListener('click', async () => {
   const files = window['_files_img2pdf'](); if (files.length === 0) return;
   const btn = document.getElementById('btn-img2pdf');
-  btn.textContent = '上传中...'; btn.disabled = true;
+  btn.textContent = '压缩中...'; btn.disabled = true;
   try {
+    // Compress images if they're too large (Vercel limit is 4.5MB)
+    const compressedFiles = await Promise.all(files.map(f => compressImageIfNeeded(f)));
     const formData = new FormData();
-    files.forEach(f => formData.append('files', f));
+    compressedFiles.forEach(f => formData.append('files', f));
+    btn.textContent = '上传中...';
     const data = await cloudProcess('img2pdf', formData);
     if (data.downloadUrl) {
       btn.textContent = '✓ 准备下载...';
