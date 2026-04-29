@@ -1,69 +1,63 @@
-// Simple multipart parser for Vercel serverless - fixed for binary data
+// Proper multipart parser that handles binary data correctly
 export function parseMultipart(buffer: Buffer, boundary: string): { files: { name: string; data: Buffer; filename: string; mimeType: string }[] } {
   const files: { name: string; data: Buffer; filename: string; mimeType: string }[] = [];
-  const boundaryBuffer = Buffer.from('--' + boundary);
-  const endBoundaryBuffer = Buffer.from('--' + boundary + '--');
   
-  let start = 0;
-  while (start < buffer.length) {
-    // Find next boundary
-    const boundaryPos = buffer.indexOf(boundaryBuffer, start);
-    if (boundaryPos === -1 || boundaryPos >= buffer.length) break;
+  // Create boundary markers
+  const bounder = '--' + boundary;
+  const boundaryBytes = Buffer.from(bounder);
+  const endBoundaryBytes = Buffer.from(bounder + '--');
+  
+  // Find all boundary positions
+  const positions: number[] = [];
+  let pos = 0;
+  while (pos < buffer.length) {
+    const idx = buffer.indexOf(boundaryBytes, pos);
+    if (idx === -1) break;
+    positions.push(idx);
+    pos = idx + boundaryBytes.length;
+  }
+  
+  // Process each section between boundaries
+  for (let i = 0; i < positions.length - 1; i++) {
+    const start = positions[i] + boundaryBytes.length;
+    let end = positions[i + 1];
     
-    // Skip boundary and CRLF
-    let headerStart = boundaryPos + boundaryBuffer.length;
-    if (headerStart >= buffer.length) break;
-    
-    // Check if it's end boundary
-    if (buffer.slice(headerStart, headerStart + 2).equals(Buffer.from('--'))) {
-      break; // End boundary found
+    // Skip CRLF after boundary
+    let dataStart = start;
+    if (dataStart < end && buffer[dataStart] === 0x0D && buffer[dataStart + 1] === 0x0A) {
+      dataStart += 2;
     }
     
-    // Skip leading CRLF
-    if (buffer[headerStart] === 0x0D && buffer[headerStart + 1] === 0x0A) headerStart += 2;
-    if (buffer[headerStart] === 0x0D && buffer[headerStart + 1] === 0x0A) headerStart += 2;
+    // Get headers + data section
+    const section = buffer.slice(dataStart, end);
     
-    const headerEnd = buffer.indexOf(Buffer.from([0x0D, 0x0A, 0x0D, 0x0A]), headerStart);
-    if (headerEnd === -1) break;
+    // Find header end (double CRLF)
+    const headerEndIdx = section.indexOf(Buffer.from([0x0D, 0x0A, 0x0D, 0x0A]));
+    if (headerEndIdx === -1) continue;
     
-    const headers = buffer.slice(headerStart, headerEnd).toString();
-    const dataStart = headerEnd + 4;
+    const headers = section.slice(0, headerEndIdx).toString();
+    const fileData = section.slice(headerEndIdx + 4);
     
-    // Find next boundary (not just \r\n!) - look for --boundary
-    let dataEnd = buffer.length;
-    for (let i = dataStart; i < buffer.length - boundaryBuffer.length - 2; i++) {
-      if (buffer[i] === 0x0D && buffer[i+1] === 0x0A) {
-        // Check if this is followed by --boundary
-        const afterCRLF = i + 2;
-        if (buffer.slice(afterCRLF, afterCRLF + boundaryBuffer.length).equals(boundaryBuffer)) {
-          dataEnd = i; // This \r\n is followed by a boundary
-          break;
-        }
-      }
-    }
-    
-    // Parse Content-Disposition header
+    // Parse headers
     const filenameMatch = headers.match(/filename="([^"]+)"/);
     const nameMatch = headers.match(/name="([^"]+)"/);
     const contentTypeMatch = headers.match(/Content-Type:\s*([^\r\n]+)/i);
     
     if (filenameMatch) {
-      const fileData = buffer.slice(dataStart, dataEnd);
-      // Trim trailing \r\n
-      if (fileData[fileData.length - 1] === 0x0A) {
-        files.push({
-          name: nameMatch?.[1] || 'file',
-          filename: filenameMatch[1],
-          mimeType: contentTypeMatch?.[1] || 'application/octet-stream',
-          data: fileData[fileData.length - 2] === 0x0D ? fileData.slice(0, -2) : fileData,
-        });
+      // Remove trailing CRLF if present
+      let cleanData = fileData;
+      if (cleanData.length >= 2 && 
+          cleanData[cleanData.length - 2] === 0x0D && 
+          cleanData[cleanData.length - 1] === 0x0A) {
+        cleanData = cleanData.slice(0, -2);
       }
-    }
-    
-    start = dataEnd;
-    // Skip past the \r\n before the next boundary
-    if (start < buffer.length && buffer[start] === 0x0D && buffer[start+1] === 0x0A) {
-      start += 2;
+      
+      files.push({
+        name: nameMatch?.[1] || 'file',
+        filename: filenameMatch[1],
+        mimeType: contentTypeMatch?.[1] || 'application/octet-stream',
+        data: cleanData,
+      });
     }
   }
   
