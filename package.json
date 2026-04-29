@@ -11,6 +11,7 @@
     "typescript": "^5.0.0"
   },
   "devDependencies": {
+    "@types/formidable": "^3.5.1",
     "@vercel/node": "^3.0.0"
   }
 }
