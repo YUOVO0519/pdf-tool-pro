@@ -1,0 +1,13 @@
+{
+  "name": "pdf-tool-pro",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@types/node": "^20.0.0",
+    "pdf-lib": "^1.17.1",
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "@vercel/node": "^3.0.0"
+  }
+}
