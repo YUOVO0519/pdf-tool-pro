@@ -167,7 +167,7 @@
 <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 <script>
 // API Base URL - replace with actual deployment URL
-const API_BASE = 'https://pdf-tool-pro.vercel.app/api'; // Use relative path when on same domain
+const API_BASE = 'https://pdf-tool-pro.vercel.app'; // Use relative path when on same domain
 
 // Tab switching
 document.querySelectorAll('.tab').forEach(tab => {
@@ -261,56 +261,61 @@ document.getElementById('generate-pdf')?.addEventListener('click', async () => {
   } catch (e) { alert('错误: ' + e.message); btn.textContent = '✓ 生成 PDF'; btn.disabled = false; }
 });
 
-// Client-side functions (existing)
+// Cloud API functions
+async function cloudProcess(action, formData) {
+  const res = await fetch(`${API_BASE}/api/${action}`, { method: 'POST', body: formData });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+// img2pdf - Cloud
 document.getElementById('btn-img2pdf')?.addEventListener('click', async () => {
   const files = window['_files_img2pdf'](); if (files.length === 0) return;
   const btn = document.getElementById('btn-img2pdf');
-  btn.textContent = '处理中...'; btn.disabled = true;
+  btn.textContent = '上传中...'; btn.disabled = true;
   try {
-    const { PDFDocument } = PDFLib;
-    const pdfDoc = await PDFDocument.create();
-    for (const f of files) {
-      const ext = f.name.split('.').pop().toLowerCase();
-      let img = ext === 'png' ? await pdfDoc.embedPng(await f.arrayBuffer()) : await pdfDoc.embedJpg(await f.arrayBuffer());
-      pdfDoc.addPage([img.width, img.height]).drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+    const formData = new FormData();
+    files.forEach(f => formData.append('files', f));
+    const data = await cloudProcess('img2pdf', formData);
+    if (data.downloadUrl) {
+      btn.textContent = '✓ 准备下载...';
+      window.location.href = data.downloadUrl;
+      setTimeout(() => { btn.textContent = '开始转换并下载'; btn.disabled = false; }, 2000);
     }
-    downloadBlob(new Blob([await pdfDoc.save()], { type: 'application/pdf' }), 'images.pdf');
-    btn.textContent = '✓ 已下载';
-    setTimeout(() => { btn.textContent = '开始转换并下载'; btn.disabled = false; }, 2000);
   } catch (e) { alert('错误: ' + e.message); btn.textContent = '开始转换并下载'; btn.disabled = false; }
 });
 
+// merge - Cloud
 document.getElementById('btn-merge')?.addEventListener('click', async () => {
   const files = window['_files_merge'](); if (files.length === 0) return;
   const btn = document.getElementById('btn-merge');
-  btn.textContent = '处理中...'; btn.disabled = true;
+  btn.textContent = '上传中...'; btn.disabled = true;
   try {
-    const { PDFDocument } = PDFLib;
-    const pdfDoc = await PDFDocument.create();
-    for (const f of files) {
-      const src = await PDFDocument.load(await f.arrayBuffer());
-      (await pdfDoc.copyPages(src, src.getPageIndices())).forEach(p => pdfDoc.addPage(p));
+    const formData = new FormData();
+    files.forEach(f => formData.append('files', f));
+    const data = await cloudProcess('merge', formData);
+    if (data.downloadUrl) {
+      btn.textContent = '✓ 准备下载...';
+      window.location.href = data.downloadUrl;
+      setTimeout(() => { btn.textContent = '开始合并并下载'; btn.disabled = false; }, 2000);
     }
-    downloadBlob(new Blob([await pdfDoc.save()], { type: 'application/pdf' }), 'merged.pdf');
-    btn.textContent = '✓ 已下载';
-    setTimeout(() => { btn.textContent = '开始合并并下载'; btn.disabled = false; }, 2000);
   } catch (e) { alert('错误: ' + e.message); btn.textContent = '开始合并并下载'; btn.disabled = false; }
 });
 
+// crop - Cloud
 document.getElementById('btn-crop')?.addEventListener('click', async () => {
   const files = window['_files_crop'](); if (files.length === 0) return;
   const btn = document.getElementById('btn-crop');
-  btn.textContent = '处理中...'; btn.disabled = true;
+  btn.textContent = '上传中...'; btn.disabled = true;
   try {
-    const { PDFDocument } = PDFLib;
-    for (const f of files) {
-      const src = await PDFDocument.load(await f.arrayBuffer());
-      const pdfDoc = await PDFDocument.create();
-      (await pdfDoc.copyPages(src, src.getPageIndices())).forEach(p => pdfDoc.addPage(p));
-      downloadBlob(new Blob([await pdfDoc.save()], { type: 'application/pdf' }), f.name);
+    const formData = new FormData();
+    formData.append('file', files[0]);
+    const data = await cloudProcess('crop', formData);
+    if (data.downloadUrl) {
+      btn.textContent = '✓ 准备下载...';
+      window.location.href = data.downloadUrl;
+      setTimeout(() => { btn.textContent = '开始裁剪并下载'; btn.disabled = false; }, 2000);
     }
-    btn.textContent = '✓ 已下载';
-    setTimeout(() => { btn.textContent = '开始裁剪并下载'; btn.disabled = false; }, 2000);
   } catch (e) { alert('错误: ' + e.message); btn.textContent = '开始裁剪并下载'; btn.disabled = false; }
 });
 
