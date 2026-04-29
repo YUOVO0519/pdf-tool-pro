@@ -49,10 +49,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const pdfDoc = await PDFDocument.create();
     
     for (const file of files) {
-      const ext = file.filename.split('.').pop().toLowerCase();
+      const ext = file.filename?.split('.').pop().toLowerCase();
       
       let img;
-      if (ext === 'png') {
+      if (ext === 'png' || ext === 'jpg') {
         img = await pdfDoc.embedPng(file.data);
       } else {
         img = await pdfDoc.embedJpg(file.data);
