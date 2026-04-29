@@ -167,7 +167,7 @@
 <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 <script>
 // API Base URL - replace with actual deployment URL
-const API_BASE = '/api'; // Use relative path when on same domain
+const API_BASE = 'https://pdf-tool-pro.vercel.app/api'; // Use relative path when on same domain
 
 // Tab switching
 document.querySelectorAll('.tab').forEach(tab => {
@@ -349,10 +349,17 @@ document.getElementById('btn-compress')?.addEventListener('click', async () => {
     formData.append('quality', quality);
     const res = await fetch(`${API_BASE}/compress`, { method: 'POST', body: formData });
     if (!res.ok) throw new Error(await res.text());
-    const blob = await res.blob();
-    downloadBlob(blob, 'compressed_' + files[0].name);
-    btn.textContent = '✓ 已下载';
-    setTimeout(() => { btn.textContent = '开始压缩并下载'; btn.disabled = false; }, 2000);
+    const data = await res.json();
+    if (data.downloadUrl) {
+      // New cloud flow: direct download URL from Blob
+      const saved = data.savedBytes > 0 ? `节省 ${(data.savedBytes/1024).toFixed(1)}KB` : '文件已优化';
+      btn.textContent = '✓ ' + saved;
+      // Open download URL directly (works on mobile!)
+      window.location.href = data.downloadUrl;
+      setTimeout(() => { btn.textContent = '开始压缩并下载'; btn.disabled = false; }, 3000);
+    } else {
+      throw new Error('No download URL');
+    }
   } catch (e) {
     alert('云端压缩暂不可用，将使用本地压缩');
     // Fallback to local compression
