@@ -3,22 +3,23 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.status(200).end();
     return;
   }
 
-  // Parse the path from URL - Vercel rewrites /api/health -> /api/health
-  const urlParts = req.url.split('?')[0];
-  const path = urlParts.replace(/^\/api\//, '') || '';
+  // Parse the path from URL
+  const fullUrl = req.url || '';
+  const path = fullUrl.replace(/^\/api\//, '').split('?')[0];
 
   // Health check
   if (path === 'health') {
@@ -26,5 +27,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  res.status(404).json({ error: 'Not found', path });
+  res.status(404).json({ error: 'Not found', path, url: req.url });
 }
