@@ -1,41 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { PDFDocument } from 'pdf-lib';
 import { put } from '@vercel/blob';
-import Busboy from 'busboy';
-
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+import formidable from 'formidable';
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
-
-function parseMultipart(req: VercelRequest): Promise<File[]> {
-  return new Promise((resolve, reject) => {
-    const files: File[] = [];
-    const bb = Busboy({ headers: req.headers });
-    
-    bb.on('file', (name, stream, info) => {
-      const chunks: Buffer[] = [];
-      stream.on('data', (chunk: Buffer) => chunks.push(chunk));
-      stream.on('end', () => {
-        const buffer = Buffer.concat(chunks);
-        const file = new File([buffer], info.filename || 'file', { type: info.mimeType });
-        files.push(file);
-      });
-    });
-    
-    bb.on('error', reject);
-    bb.on('finish', () => resolve(files));
-    
-    req.body.pipe(bb);
-  });
-}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -53,23 +25,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const files = await parseMultipart(req);
+    const form = formidable({ multiples: true });
+    const fields = await form.parse(req as any);
     
-    if (files.length === 0) {
+    // Get all files
+    let fileList: any[] = [];
+    const files = fields[1];
+    for (const key in files) {
+      const val = files[key];
+      if (Array.isArray(val)) {
+        fileList.push(...val);
+      } else {
+        fileList.push(val);
+      }
+    }
+    
+    if (fileList.length === 0) {
       res.status(400).json({ error: 'No files provided' });
       return;
     }
 
     const pdfDoc = await PDFDocument.create();
+    const fs = await import('fs');
     
-    for (const file of files) {
-      const ext = file.name.split('.').pop().toLowerCase();
-      let img;
+    for (const file of fileList) {
+      if (!file || !file.path) continue;
+      const data = fs.readFileSync(file.path);
+      const ext = file.originalFilename?.split('.').pop().toLowerCase() || 'jpg';
       
+      let img;
       if (ext === 'png') {
-        img = await pdfDoc.embedPng(await file.arrayBuffer());
+        img = await pdfDoc.embedPng(data);
       } else {
-        img = await pdfDoc.embedJpg(await file.arrayBuffer());
+        img = await pdfDoc.embedJpg(data);
       }
       
       pdfDoc.addPage([img.width, img.height]).drawImage(img, {
@@ -90,7 +78,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: true,
       downloadUrl: blob.url,
       fileName: filename,
-      imageCount: files.length,
+      imageCount: fileList.length,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);

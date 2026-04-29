@@ -1,40 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { PDFDocument } from 'pdf-lib';
 import { put } from '@vercel/blob';
-import Busboy from 'busboy';
-
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+import formidable from 'formidable';
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
-
-function parseMultipart(req: VercelRequest): Promise<File[]> {
-  return new Promise((resolve, reject) => {
-    const files: File[] = [];
-    const bb = Busboy({ headers: req.headers });
-    
-    bb.on('file', (name, stream, info) => {
-      const chunks: Buffer[] = [];
-      stream.on('data', (chunk: Buffer) => chunks.push(chunk));
-      stream.on('end', () => {
-        const buffer = Buffer.concat(chunks);
-        const file = new File([buffer], info.filename || 'file', { type: info.mimeType });
-        files.push(file);
-      });
-    });
-    
-    bb.on('error', reject);
-    bb.on('finish', () => resolve(files));
-    
-    req.body.pipe(bb);
-  });
-}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -52,14 +25,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const files = await parseMultipart(req);
+    const form = formidable();
+    const fields = await form.parse(req as any);
     
-    if (files.length === 0) {
+    const files = fields[1]['file'] || fields[1]['files[]'] || [];
+    const file = Array.isArray(files) ? files[0] : files;
+    
+    if (!file || !file.path) {
       res.status(400).json({ error: 'No file provided' });
       return;
     }
 
-    const srcPdf = await PDFDocument.load(await files[0].arrayBuffer());
+    const fs = await import('fs');
+    const data = fs.readFileSync(file.path);
+    const srcPdf = await PDFDocument.load(data);
     const pdfDoc = await PDFDocument.create();
     const pages = await pdfDoc.copyPages(srcPdf, srcPdf.getPageIndices());
     pages.forEach(page => pdfDoc.addPage(page));

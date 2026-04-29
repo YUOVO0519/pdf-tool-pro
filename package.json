@@ -6,6 +6,7 @@
     "@types/node": "^20.0.0",
     "@vercel/blob": "^2.3.3",
     "busboy": "^1.6.0",
+    "formidable": "^3.5.4",
     "pdf-lib": "^1.17.1",
     "typescript": "^5.0.0"
   },

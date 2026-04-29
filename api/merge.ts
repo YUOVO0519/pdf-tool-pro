@@ -1,41 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { PDFDocument } from 'pdf-lib';
 import { put } from '@vercel/blob';
-import Busboy from 'busboy';
-
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+import formidable from 'formidable';
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
-
-function parseMultipart(req: VercelRequest): Promise<File[]> {
-  return new Promise((resolve, reject) => {
-    const files: File[] = [];
-    const bb = Busboy({ headers: req.headers });
-    
-    bb.on('file', (name, stream, info) => {
-      const chunks: Buffer[] = [];
-      stream.on('data', (chunk: Buffer) => chunks.push(chunk));
-      stream.on('end', () => {
-        const buffer = Buffer.concat(chunks);
-        const file = new File([buffer], info.filename || 'file', { type: info.mimeType });
-        files.push(file);
-      });
-    });
-    
-    bb.on('error', reject);
-    bb.on('finish', () => resolve(files));
-    
-    req.body.pipe(bb);
-  });
-}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -53,18 +25,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const files = await parseMultipart(req);
+    const form = formidable();
+    const fields = await form.parse(req as any);
     
-    if (files.length < 2) {
+    // fields[0] contains the fields, fields[1] contains the files
+    const files = fields[1]['files[]'] || fields[1]['files'] || [];
+    const fileArray = Array.isArray(files) ? files : [files];
+    
+    if (fileArray.length < 2) {
       res.status(400).json({ error: 'Need at least 2 PDF files to merge' });
       return;
     }
 
     const pdfDoc = await PDFDocument.create();
     
-    for (const file of files) {
-      const arrayBuffer = await file.arrayBuffer();
-      const srcPdf = await PDFDocument.load(arrayBuffer);
+    for (const file of fileArray) {
+      if (!file || !file.path) continue;
+      const fs = await import('fs');
+      const data = fs.readFileSync(file.path);
+      const srcPdf = await PDFDocument.load(data);
       const pages = await pdfDoc.copyPages(srcPdf, srcPdf.getPageIndices());
       pages.forEach(page => pdfDoc.addPage(page));
     }
@@ -79,7 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: true,
       downloadUrl: blob.url,
       fileName: filename,
-      fileCount: files.length,
+      fileCount: fileArray.length,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
