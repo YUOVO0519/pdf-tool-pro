@@ -16,14 +16,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const { path } = req.query;
-  const url = Array.isArray(path) ? path[0] : path || '';
+  // Parse the path from URL - Vercel rewrites /api/health -> /api/health
+  const urlParts = req.url.split('?')[0];
+  const path = urlParts.replace(/^\/api\//, '') || '';
 
   // Health check
-  if (url === 'health') {
+  if (path === 'health') {
     res.json({ status: 'ok', service: 'PDF Tool Pro API' });
     return;
   }
 
-  res.status(404).json({ error: 'Not found' });
+  res.status(404).json({ error: 'Not found', path });
 }
