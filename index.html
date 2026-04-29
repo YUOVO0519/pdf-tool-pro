@@ -3,176 +3,849 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDF 工具箱</title>
+<title>PDF 工具箱 - Miku</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
-  h1 { text-align: center; margin-bottom: 8px; color: #00d4ff; }
-  .subtitle { text-align: center; color: #666; margin-bottom: 24px; font-size: 13px; }
-  .tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
-  .tab { padding: 10px 20px; background: #16213e; border: none; color: #888; cursor: pointer; border-radius: 8px; font-size: 15px; transition: all 0.2s; }
-  .tab.active { background: #0f3460; color: #00d4ff; }
-  .tab:hover { background: #1f4068; }
-  .panel { display: none; background: #16213e; border-radius: 12px; padding: 24px; max-width: 700px; margin: 0 auto; }
+  
+  :root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --secondary: #ec4899;
+    --accent: #06b6d4;
+    --bg-dark: #0f0f23;
+    --bg-card: #1a1a2e;
+    --bg-card-hover: #252542;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --success: #10b981;
+    --danger: #ef4444;
+  }
+  
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-dark);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px;
+    background-image: 
+      radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 30px 20px 40px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .header-img {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--primary);
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.4);
+    margin-bottom: 20px;
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+    letter-spacing: -1px;
+  }
+  
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+  
+  .badge-container {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  
+  .badge-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+  }
+  
+  .badge-success {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+  
+  /* Tab Navigation */
+  .nav-container {
+    max-width: 800px;
+    margin: 0 auto 24px;
+    position: sticky;
+    top: 10px;
+    z-index: 100;
+  }
+  
+  .nav {
+    display: flex;
+    gap: 8px;
+    background: rgba(26, 26, 46, 0.9);
+    backdrop-filter: blur(20px);
+    padding: 10px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  
+  .nav::-webkit-scrollbar { display: none; }
+  
+  .tab {
+    padding: 10px 18px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .tab:hover {
+    background: var(--bg-card-hover);
+    color: var(--text);
+  }
+  
+  .tab.active {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+  }
+  
+  .tab-icon { font-size: 1.1rem; }
+  
+  /* Panels */
+  .panel {
+    display: none;
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 28px;
+    max-width: 700px;
+    margin: 0 auto;
+    border: 1px solid var(--border);
+    animation: fadeIn 0.3s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
   .panel.active { display: block; }
-  .drop-zone { border: 2px dashed #00d4ff; border-radius: 12px; padding: 36px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 12px; }
-  .drop-zone:hover, .drop-zone.dragover { background: rgba(0,212,255,0.1); border-color: #00fff5; }
-  .drop-zone p { color: #888; margin-top: 8px; font-size: 14px; }
-  .file-header { display: flex; justify-content: space-between; align-items: center; margin: 12px 0 6px; }
-  .file-header span { color: #888; font-size: 13px; }
-  .clear-btn { background: #e94560; border: none; color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
-  .clear-btn:hover { background: #ff6b6b; }
-  .file-list { list-style: none; margin: 6px 0; max-height: 260px; overflow-y: auto; }
-  .file-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #1a1a2e; border-radius: 6px; margin-bottom: 5px; font-size: 14px; cursor: grab; }
-  .file-list li:active { cursor: grabbing; }
-  .file-list li.dragging { opacity: 0.5; }
-  .file-list li .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 8px; }
-  .file-list li .size { color: #666; font-size: 12px; margin-right: 8px; }
-  .file-list .remove { background: #e94560; border: none; color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; flex-shrink: 0; }
-  .file-list .remove:hover { background: #ff6b6b; }
-  .drag-handle { color: #444; margin-right: 8px; font-size: 16px; cursor: grab; }
-  .settings { margin: 14px 0; }
-  .settings label { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; color: #aaa; }
-  .settings input[type="checkbox"] { width: 16px; height: 16px; }
-  .btn { display: block; width: 100%; padding: 14px; background: #00d4ff; border: none; border-radius: 8px; color: #1a1a2e; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 12px; }
-  .btn:hover { background: #00fff5; }
-  .btn:disabled { background: #333; color: #666; cursor: not-allowed; }
-  .note { font-size: 12px; color: #555; margin: 8px 0; }
-  .info-box { background: #1a1a2e; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px; color: #888; }
-  .camera-area { text-align: center; padding: 20px 0; }
-  .camera-btn { display: inline-block; padding: 16px 32px; background: #00d4ff; border: none; border-radius: 50px; color: #1a1a2e; font-size: 18px; font-weight: bold; cursor: pointer; }
-  .camera-btn:hover { background: #00fff5; }
-  .camera-tip { color: #666; margin-top: 10px; font-size: 14px; }
-  .preview-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 16px; }
-  .preview-grid .photo-item { position: relative; width: 90px; height: 90px; }
-  .preview-grid .photo-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid #0f3460; }
-  .preview-grid .photo-item .del-photo { position: absolute; top: -6px; right: -6px; background: #e94560; border: none; color: white; width: 22px; height: 22px; border-radius: 50%; font-size: 14px; cursor: pointer; line-height: 22px; }
-  .info-box strong { color: #00d4ff; }
+  
+  .panel-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .panel-desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+  }
+  
+  /* Drop Zone */
+  .drop-zone {
+    border: 2px dashed transparent;
+    border-radius: 16px;
+    padding: 50px 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: 
+      linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+      linear-gradient(135deg, var(--primary), var(--secondary)) border-box;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .drop-zone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(236, 72, 153, 0.05));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  
+  .drop-zone:hover::before,
+  .drop-zone.dragover::before { opacity: 1; }
+  
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent);
+    transform: scale(1.01);
+  }
+  
+  .drop-zone-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    display: block;
+  }
+  
+  .drop-zone-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  
+  .drop-zone-hint {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  
+  /* File List */
+  .file-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 16px 0 10px;
+    padding: 0 4px;
+  }
+  
+  .file-count {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  
+  .clear-btn {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: var(--danger);
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  
+  .clear-btn:hover {
+    background: rgba(239, 68, 68, 0.25);
+  }
+  
+  .file-list {
+    list-style: none;
+    max-height: 280px;
+    overflow-y: auto;
+    padding-right: 5px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  
+  .file-list::-webkit-scrollbar { width: 6px; }
+  .file-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  
+  .file-list li {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--bg-dark);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  
+  .file-list li:hover {
+    border-color: var(--primary);
+    background: var(--bg-card-hover);
+  }
+  
+  .file-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  
+  .file-info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .file-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .file-size {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+  
+  .file-remove {
+    background: rgba(239, 68, 68, 0.15);
+    border: none;
+    color: var(--danger);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  
+  .file-remove:hover {
+    background: var(--danger);
+    color: white;
+  }
+  
+  /* Buttons */
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  }
+  
+  .btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  }
+  
+  .btn:disabled {
+    background: var(--border);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  
+  .btn-success {
+    background: linear-gradient(135deg, var(--success), #059669);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  }
+  
+  .btn-success:hover:not(:disabled) {
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  }
+  
+  .btn-secondary {
+    background: var(--bg-card-hover);
+    border: 1px solid var(--border);
+    box-shadow: none;
+  }
+  
+  .btn-secondary:hover:not(:disabled) {
+    border-color: var(--primary);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+  }
+  
+  /* Settings */
+  .settings {
+    margin: 16px 0;
+    padding: 16px;
+    background: var(--bg-dark);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  
+  .settings-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-muted);
+  }
+  
+  .radio-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  
+  .radio-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+  }
+  
+  .radio-label:has(input:checked) {
+    border-color: var(--primary);
+    background: rgba(99, 102, 241, 0.1);
+  }
+  
+  .radio-label input { display: none; }
+  
+  /* Info Box */
+  .info-box {
+    padding: 14px 16px;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin: 16px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .info-box.warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.2);
+  }
+  
+  .info-box-icon { font-size: 1.1rem; flex-shrink: 0; }
+  
+  /* Camera */
+  .camera-area {
+    text-align: center;
+    padding: 20px 0;
+  }
+  
+  .camera-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 36px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border: none;
+    border-radius: 50px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+    transition: all 0.3s;
+  }
+  
+  .camera-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
+  }
+  
+  .camera-tip {
+    color: var(--text-muted);
+    margin-top: 12px;
+    font-size: 0.9rem;
+  }
+  
+  .preview-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .photo-item {
+    position: relative;
+    width: 100px;
+    height: 100px;
+  }
+  
+  .photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 3px solid var(--primary);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  }
+  
+  .photo-item .del-photo {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--danger);
+    border: none;
+    color: white;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  }
+  
+  .camera-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .camera-actions .btn {
+    flex: 1;
+    max-width: 200px;
+    margin: 0;
+  }
+  
+  /* Textarea */
+  textarea {
+    width: 100%;
+    min-height: 200px;
+    background: var(--bg-dark);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 0.9rem;
+    resize: vertical;
+    font-family: inherit;
+  }
+  
+  textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+  
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  
+  .footer a {
+    color: var(--primary);
+    text-decoration: none;
+  }
+  
+  /* Checkbox styling */
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 12px 16px;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: all 0.2s;
+  }
+  
+  .checkbox-label:has(input:checked) {
+    border-color: var(--primary);
+    background: rgba(99, 102, 241, 0.1);
+  }
+  
+  .checkbox-label input { display: none; }
+  
+  .custom-checkbox {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  
+  .checkbox-label:has(input:checked) .custom-checkbox {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+  
+  .custom-checkbox::after {
+    content: '✓';
+    color: white;
+    font-size: 0.8rem;
+    display: none;
+  }
+  
+  .checkbox-label:has(input:checked) .custom-checkbox::after {
+    display: block;
+  }
 </style>
 </head>
 <body>
 
-<h1>📄 PDF 工具箱</h1>
-<p class="subtitle">纯网页处理，无需上传，保护隐私</p>
-
-<div class="tabs">
-  <button class="tab active" data-tab="camera">拍照转 PDF</button>
-  <button class="tab" data-tab="img2pdf">图片转 PDF</button>
-  <button class="tab" data-tab="merge">合并 PDF</button>
-  <button class="tab" data-tab="crop">裁剪白边</button>
-  <button class="tab" data-tab="extract">提取文字</button>
-  <button class="tab" data-tab="compress">压缩 PDF</button>
-</div>
-
-<!-- 图片转 PDF -->
-<div id="camera" class="panel active">
-  <div class="camera-area">
-    <div id="camera-preview-area" style="text-align:center">
-      <button class="camera-btn" id="open-camera">📷 拍照</button>
-      <p class="camera-tip">拍照后可继续添加，完成后点「生成 PDF」</p>
-    </div>
-    <input type="file" id="camera-input" accept="image/*" capture="environment" hidden>
-    <div id="photo-grid" class="preview-grid"></div>
-    <div id="camera-actions" style="display:none; margin-top:16px; text-align:center">
-      <button class="camera-btn" id="add-more-photo" style="background:#0f3460; margin-right:10px">📷 继续拍照</button>
-      <button class="camera-btn" id="generate-pdf" style="background:#00b894">✓ 生成 PDF</button>
-    </div>
+<!-- Header -->
+<div class="header">
+  <img src="https://www.minimaxi.com/favicon.ico" alt="Miku" class="header-img" onerror="this.style.display='none'">
+  <h1>📄 PDF 工具箱</h1>
+  <p class="subtitle">纯本地处理，保护隐私</p>
+  <div class="badge-container">
+    <span class="badge badge-primary">🔒 隐私安全</span>
+    <span class="badge badge-success">☁️ 无需上传</span>
   </div>
 </div>
 
+<!-- Navigation -->
+<div class="nav-container">
+  <nav class="nav">
+    <button class="tab active" data-tab="camera">
+      <span class="tab-icon">📷</span> 拍照
+    </button>
+    <button class="tab" data-tab="img2pdf">
+      <span class="tab-icon">🖼️</span> 图片
+    </button>
+    <button class="tab" data-tab="merge">
+      <span class="tab-icon">🔗</span> 合并
+    </button>
+    <button class="tab" data-tab="crop">
+      <span class="tab-icon">✂️</span> 裁剪
+    </button>
+    <button class="tab" data-tab="extract">
+      <span class="tab-icon">📝</span> 文字
+    </button>
+    <button class="tab" data-tab="compress">
+      <span class="tab-icon">🗜️</span> 压缩
+    </button>
+  </nav>
+</div>
+
+<!-- Camera Panel -->
+<div id="camera" class="panel active">
+  <div class="panel-title">📷 拍照转 PDF</div>
+  <div class="panel-desc">拍下照片，快速生成 PDF 文档</div>
+  
+  <div class="camera-area">
+    <button class="camera-btn" id="open-camera">
+      📷 拍照
+    </button>
+    <p class="camera-tip">拍照后可继续添加，完成后点「生成 PDF」</p>
+  </div>
+  
+  <input type="file" id="camera-input" accept="image/*" capture="environment" hidden>
+  
+  <div id="photo-grid" class="preview-grid"></div>
+  
+  <div id="camera-actions" class="camera-actions" style="display:none">
+    <button class="btn btn-secondary" id="add-more-photo">
+      📷 继续拍
+    </button>
+    <button class="btn btn-success" id="generate-pdf">
+      ✓ 生成 PDF
+    </button>
+  </div>
+</div>
+
+<!-- Image to PDF Panel -->
 <div id="img2pdf" class="panel">
+  <div class="panel-title">🖼️ 图片转 PDF</div>
+  <div class="panel-desc">将多张图片合并为一个 PDF 文件</div>
+  
   <div class="drop-zone" id="dz-img2pdf">
-    拖放图片到这里<br>或点击选择文件
-    <p>支持 JPG、PNG、GIF、WebP</p>
+    <span class="drop-zone-icon">📤</span>
+    <div class="drop-zone-text">拖放图片到这里</div>
+    <div class="drop-zone-hint">或点击选择文件 · 支持 JPG、PNG、WebP</div>
   </div>
   <input type="file" id="fi-img2pdf" multiple accept="image/*" hidden>
+  
   <div class="file-header">
-    <span id="count-img2pdf">已选择 0 个文件</span>
-    <button class="clear-btn" id="clear-img2pdf" style="display:none">清空全部</button>
+    <span class="file-count" id="count-img2pdf">已选择 0 个文件</span>
+    <button class="clear-btn" id="clear-img2pdf" style="display:none">清空</button>
   </div>
   <ul class="file-list" id="fl-img2pdf"></ul>
-  <div class="settings">
-    <label><input type="checkbox" id="crop-img2pdf" checked> 统一尺寸（按首图）</label>
-  </div>
+  
+  <label class="checkbox-label">
+    <input type="checkbox" id="crop-img2pdf" checked>
+    <span class="custom-checkbox"></span>
+    统一尺寸（按第一张图）
+  </label>
+  
   <button class="btn" id="btn-img2pdf" disabled>开始转换并下载</button>
 </div>
 
-<!-- 合并 PDF -->
+<!-- Merge PDF Panel -->
 <div id="merge" class="panel">
+  <div class="panel-title">🔗 合并 PDF</div>
+  <div class="panel-desc">将多个 PDF 文件合并为一个</div>
+  
   <div class="drop-zone" id="dz-merge">
-    拖放 PDF 文件到这里<br>或点击选择文件（可拖拽调整顺序）
-    <p>支持多选</p>
+    <span class="drop-zone-icon">📤</span>
+    <div class="drop-zone-text">拖放 PDF 文件到这里</div>
+    <div class="drop-zone-hint">支持多选，可拖拽调整顺序</div>
   </div>
   <input type="file" id="fi-merge" multiple accept="application/pdf" hidden>
+  
   <div class="file-header">
-    <span id="count-merge">已选择 0 个文件</span>
-    <button class="clear-btn" id="clear-merge" style="display:none">清空全部</button>
+    <span class="file-count" id="count-merge">已选择 0 个文件</span>
+    <button class="clear-btn" id="clear-merge" style="display:none">清空</button>
   </div>
   <ul class="file-list" id="fl-merge"></ul>
+  
   <div class="info-box">
-    💡 <strong>提示：</strong>拖拽文件可调整顺序，调整后点击合并即可
+    <span class="info-box-icon">💡</span>
+    <span>拖拽文件可调整顺序</span>
   </div>
+  
   <button class="btn" id="btn-merge" disabled>开始合并并下载</button>
 </div>
 
-<!-- 裁剪白边 -->
+<!-- Crop Panel -->
 <div id="crop" class="panel">
+  <div class="panel-title">✂️ 裁剪白边</div>
+  <div class="panel-desc">自动裁剪 PDF 图片页面的白边</div>
+  
   <div class="drop-zone" id="dz-crop">
-    拖放 PDF 文件到这里<br>或点击选择文件
-    <p>自动裁剪图片页面的白边</p>
+    <span class="drop-zone-icon">📤</span>
+    <div class="drop-zone-text">拖放 PDF 文件到这里</div>
+    <div class="drop-zone-hint">自动识别并裁剪白边</div>
   </div>
   <input type="file" id="fi-crop" multiple accept="application/pdf" hidden>
+  
   <div class="file-header">
-    <span id="count-crop">已选择 0 个文件</span>
-    <button class="clear-btn" id="clear-crop" style="display:none">清空全部</button>
+    <span class="file-count" id="count-crop">已选择 0 个文件</span>
+    <button class="clear-btn" id="clear-crop" style="display:none">清空</button>
   </div>
   <ul class="file-list" id="fl-crop"></ul>
+  
   <button class="btn" id="btn-crop" disabled>开始裁剪并下载</button>
 </div>
 
-<!-- 提取文字 -->
+<!-- Extract Text Panel -->
 <div id="extract" class="panel">
+  <div class="panel-title">📝 提取文字</div>
+  <div class="panel-desc">从 PDF 中提取文字内容</div>
+  
   <div class="drop-zone" id="dz-extract">
-    拖放 PDF 文件到这里<br>或点击选择文件
-    <p>提取 PDF 中的文字内容（仅支持文本型 PDF）</p>
+    <span class="drop-zone-icon">📤</span>
+    <div class="drop-zone-text">拖放 PDF 文件到这里</div>
+    <div class="drop-zone-hint">仅支持文字型 PDF</div>
   </div>
   <input type="file" id="fi-extract" multiple accept="application/pdf" hidden>
+  
   <div class="file-header">
-    <span id="count-extract">已选择 0 个文件</span>
-    <button class="clear-btn" id="clear-extract" style="display:none">清空全部</button>
+    <span class="file-count" id="count-extract">已选择 0 个文件</span>
+    <button class="clear-btn" id="clear-extract" style="display:none">清空</button>
   </div>
   <ul class="file-list" id="fl-extract"></ul>
-  <div class="info-box">
-    ⚠️ 仅能提取<strong>文字型 PDF</strong>，扫描版图片 PDF 无法提取
+  
+  <div class="info-box warning">
+    <span class="info-box-icon">⚠️</span>
+    <span>仅能提取文字型 PDF，扫描版图片无法提取</span>
   </div>
+  
   <button class="btn" id="btn-extract" disabled>提取文字</button>
-  <div id="extract-result" style="margin-top:16px;display:none">
-    <div class="file-header"><span>提取结果</span><button class="clear-btn" onclick="copyText()">复制文字</button></div>
-    <textarea id="extract-text" readonly style="width:100%;min-height:200px;background:#1a1a2e;color:#eee;border:1px solid #333;border-radius:8px;padding:12px;margin-top:8px;font-size:13px;resize:vertical"></textarea>
+  
+  <div id="extract-result" style="display:none; margin-top:16px">
+    <div class="file-header">
+      <span class="file-count">提取结果</span>
+      <button class="clear-btn" onclick="copyText()">复制</button>
+    </div>
+    <textarea id="extract-text" readonly placeholder="文字将显示在这里..."></textarea>
   </div>
 </div>
 
-<!-- 压缩 PDF -->
+<!-- Compress Panel -->
 <div id="compress" class="panel">
+  <div class="panel-title">🗜️ 压缩 PDF</div>
+  <div class="panel-desc">减小 PDF 文件大小</div>
+  
   <div class="drop-zone" id="dz-compress">
-    拖放 PDF 文件到这里<br>或点击选择文件
-    <p>支持多选，压缩后下载</p>
+    <span class="drop-zone-icon">📤</span>
+    <div class="drop-zone-text">拖放 PDF 文件到这里</div>
+    <div class="drop-zone-hint">支持多选批量压缩</div>
   </div>
   <input type="file" id="fi-compress" multiple accept="application/pdf" hidden>
+  
   <div class="file-header">
-    <span id="count-compress">已选择 0 个文件</span>
-    <button class="clear-btn" id="clear-compress" style="display:none">清空全部</button>
+    <span class="file-count" id="count-compress">已选择 0 个文件</span>
+    <button class="clear-btn" id="clear-compress" style="display:none">清空</button>
   </div>
   <ul class="file-list" id="fl-compress"></ul>
-  <div class="settings" style="margin-top:14px">
-    <label>压缩质量：</label>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="quality" value="high" checked style="width:16px;height:16px"> 高（推荐）</label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="quality" value="medium" style="width:16px;height:16px"> 中</label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="quality" value="low" style="width:16px;height:16px"> 低（最小）</label>
+  
+  <div class="settings">
+    <div class="settings-title">压缩质量</div>
+    <div class="radio-group">
+      <label class="radio-label">
+        <input type="radio" name="quality" value="high" checked>
+        高（推荐）
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="quality" value="medium">
+        中
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="quality" value="low">
+        低（最小）
+      </label>
     </div>
   </div>
+  
   <button class="btn" id="btn-compress" disabled>开始压缩并下载</button>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <p>Made with 💜 by <a href="#">Miku</a> · 保护隐私，本地处理</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
@@ -210,7 +883,6 @@ function setupDropZone(type) {
   dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
   dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragover'); addFiles([...e.dataTransfer.files]); });
   fi.addEventListener('change', () => addFiles([...fi.files]));
-
   clearBtn.addEventListener('click', e => { e.stopPropagation(); files = []; render(); });
 
   function addFiles(newFiles) {
@@ -224,46 +896,28 @@ function setupDropZone(type) {
     count.textContent = `已选择 ${files.length} 个文件`;
     clearBtn.style.display = files.length > 0 ? 'block' : 'none';
     btn.disabled = files.length === 0;
-    fl.innerHTML = files.map((f, i) => `
-      <li draggable="true" data-index="${i}">
-        <span class="drag-handle">☰</span>
-        <span class="name" title="${f.name}">${i + 1}. ${f.name}</span>
-        <span class="size">${formatSize(f.size)}</span>
-        <button class="remove" onclick="remove_${type}(${i})">×</button>
-      </li>
-    `).join('');
-    initDragDrop();
+    fl.innerHTML = files.map((f, i) => {
+      const icon = type === 'merge' || type === 'crop' || type === 'compress' ? '📄' : '🖼️';
+      return `
+        <li>
+          <div class="file-icon">${icon}</div>
+          <div class="file-info">
+            <div class="file-name">${f.name}</div>
+            <div class="file-size">${formatSize(f.size)}</div>
+          </div>
+          <button class="file-remove" onclick="remove_${type}(${i})">×</button>
+        </li>
+      `;
+    }).join('');
   }
 
   window[`remove_${type}`] = i => { files.splice(i, 1); render(); };
   window[`_files_${type}`] = () => files;
-
-  // Drag to reorder
-  function initDragDrop() {
-    const items = fl.querySelectorAll('li');
-    items.forEach(item => {
-      item.addEventListener('dragstart', e => {
-        item.classList.add('dragging');
-        e.dataTransfer.setData('text/plain', item.dataset.index);
-      });
-      item.addEventListener('dragend', () => item.classList.remove('dragging'));
-      item.addEventListener('dragover', e => e.preventDefault());
-      item.addEventListener('drop', e => {
-        e.preventDefault();
-        const fromIdx = parseInt(document.querySelector('.dragging').dataset.index);
-        const toIdx = parseInt(item.dataset.index);
-        const moved = files.splice(fromIdx, 1)[0];
-        files.splice(toIdx, 0, moved);
-        render();
-      });
-    });
-  }
-  initDragDrop();
 }
 
 ['img2pdf', 'merge', 'crop', 'extract', 'compress'].forEach(setupDropZone);
 
-// Camera / Photo to PDF
+// Camera
 let cameraPhotos = [];
 const cameraInput = document.getElementById('camera-input');
 const photoGrid = document.getElementById('photo-grid');
@@ -273,9 +927,9 @@ document.getElementById('open-camera').addEventListener('click', () => cameraInp
 document.getElementById('add-more-photo').addEventListener('click', () => cameraInput.click());
 
 cameraInput.addEventListener('change', async () => {
-  const files = [...cameraInput.files];
-  if (files.length === 0) return;
-  for (const file of files) {
+  const newFiles = [...cameraInput.files];
+  if (newFiles.length === 0) return;
+  for (const file of newFiles) {
     const url = URL.createObjectURL(file);
     cameraPhotos.push({ file, url });
   }
@@ -290,7 +944,7 @@ function renderPhotoGrid() {
       <button class="del-photo" onclick="removePhoto(${i})">×</button>
     </div>
   `).join('');
-  cameraActions.style.display = cameraPhotos.length > 0 ? 'block' : 'none';
+  cameraActions.style.display = cameraPhotos.length > 0 ? 'flex' : 'none';
 }
 
 window.removePhoto = i => {
@@ -352,7 +1006,7 @@ document.getElementById('btn-img2pdf').addEventListener('click', async () => {
   } catch (e) { alert('错误: ' + e.message); btn.textContent = '开始转换并下载'; btn.disabled = false; }
 });
 
-// Merge PDFs
+// Merge
 document.getElementById('btn-merge').addEventListener('click', async () => {
   const files = window['_files_merge']();
   if (files.length === 0) return;
@@ -371,7 +1025,7 @@ document.getElementById('btn-merge').addEventListener('click', async () => {
   } catch (e) { alert('错误: ' + e.message); btn.textContent = '开始合并并下载'; btn.disabled = false; }
 });
 
-// Crop PDF (copy only)
+// Crop
 document.getElementById('btn-crop').addEventListener('click', async () => {
   const files = window['_files_crop']();
   if (files.length === 0) return;
@@ -390,7 +1044,7 @@ document.getElementById('btn-crop').addEventListener('click', async () => {
   } catch (e) { alert('错误: ' + e.message); btn.textContent = '开始裁剪并下载'; btn.disabled = false; }
 });
 
-// Extract text from PDF
+// Extract
 document.getElementById('btn-extract').addEventListener('click', async () => {
   const files = window['_files_extract']();
   if (files.length === 0) return;
@@ -401,17 +1055,14 @@ document.getElementById('btn-extract').addEventListener('click', async () => {
   resultDiv.style.display = 'none';
   try {
     let allText = '';
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    for (const f of files) {
+      const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
       let text = '';
       for (let p = 1; p <= pdf.numPages; p++) {
         const page = await pdf.getPage(p);
-        const content = await page.getTextContent();
-        text += content.items.map(item => item.str).join(' ') + '\n\n';
+        text += (await page.getTextContent()).items.map(i => i.str).join(' ') + '\n\n';
       }
-      allText += `=== ${file.name} (${pdf.numPages}页) ===\n${text.trim()}\n\n`;
+      allText += `=== ${f.name} (${pdf.numPages}页) ===\n${text.trim()}\n\n`;
     }
     textArea.value = allText.trim();
     resultDiv.style.display = 'block';
@@ -426,10 +1077,10 @@ function copyText() {
   document.execCommand('copy');
   const btn = document.querySelector('#extract .clear-btn');
   btn.textContent = '已复制!';
-  setTimeout(() => btn.textContent = '复制文字', 1500);
+  setTimeout(() => btn.textContent = '复制', 1500);
 }
 
-// Compress PDF
+// Compress
 document.getElementById('btn-compress').addEventListener('click', async () => {
   const files = window['_files_compress']();
   if (files.length === 0) return;
@@ -438,28 +1089,13 @@ document.getElementById('btn-compress').addEventListener('click', async () => {
   btn.textContent = '压缩中...'; btn.disabled = true;
   try {
     const { PDFDocument } = PDFLib;
-    // Quality settings: jpeg quality and DCF (downsampling)
-    const qualityMap = { high: 85, medium: 60, low: 30 };
-    const jpegQuality = qualityMap[quality];
-    
-    for (const file of files) {
-      const srcBytes = await file.arrayBuffer();
-      const srcDoc = await PDFDocument.load(srcBytes);
+    for (const f of files) {
+      const src = await PDFDocument.load(await f.arrayBuffer());
       const pdfDoc = await PDFDocument.create();
-      
-      const pages = await pdfDoc.copyPages(srcDoc, srcDoc.getPageIndices());
-      pages.forEach(p => pdfDoc.addPage(p));
-      
-      // Save with compression - pdf-lib doesn't expose JPEG quality directly
-      // Use flate compression which is always applied
-      const options = {};
-      if (quality === 'low') {
-        // Drop unused objects + compress streams
-        options.useObjectStreams = true;
-      }
-      
-      const pdfBytes = await pdfDoc.save({ useFlateCompression: true });
-      downloadBlob(new Blob([pdfBytes], { type: 'application/pdf' }), 'compressed_' + file.name);
+      (await pdfDoc.copyPages(src, src.getPageIndices())).forEach(p => pdfDoc.addPage(p));
+      const options = quality === 'low' ? { useObjectStreams: true } : {};
+      const pdfBytes = await pdfDoc.save({ useFlateCompression: true, ...options });
+      downloadBlob(new Blob([pdfBytes], { type: 'application/pdf' }), 'compressed_' + f.name);
     }
     btn.textContent = '✓ 已下载';
     setTimeout(() => { btn.textContent = '开始压缩并下载'; btn.disabled = false; }, 2000);
